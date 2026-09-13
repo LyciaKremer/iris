@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { listarDatasExecucao } from "@/server/queries/noticias";
 import { ExportPanel } from "./export-panel";
+import { ExportarBaseCompleta } from "./exportar-base-completa";
 
 export default async function ExportarPage() {
   const datas = await listarDatasExecucao();
@@ -25,6 +26,7 @@ export default async function ExportarPage() {
         processadas em "Revisar".
       </p>
       <ExportPanel datas={datas} />
+      <ExportarBaseCompleta />
     </div>
   );
 }
