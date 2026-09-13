@@ -1,0 +1,71 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─────────────────────────────────────────────────────────────
+// Auth — email + senha, sem sistema de convite (piloto de uso único/pequena equipe).
+// ─────────────────────────────────────────────────────────────
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+// ─────────────────────────────────────────────────────────────
+// Notícia — substitui os arquivos de cache (manchetes/sentimentos/secretarias)
+// e o historico_noticias.json do pipeline Python: cada linha é, ao mesmo
+// tempo, o cache (campos nulos = ainda não processado) e o registro
+// histórico permanente.
+// ─────────────────────────────────────────────────────────────
+
+model Noticia {
+  id String @id @default(cuid())
+
+  // Id do item vindo do vendor de clipping — NÃO é a chave primária: o
+  // mesmo noticiaId pode se repetir em dataExecucao diferentes (ver abaixo),
+  // então não pode ser único sozinho.
+  noticiaId String
+
+  // (noticiaId, dataExecucao) é a chave de dedup do histórico: o mesmo item
+  // processado em dois dias diferentes gera duas linhas (replica a regra
+  // de historico.py — dedup é por (id, data), não só por id).
+  dataExecucao String
+
+  veiculo            String
+  tipoVeiculo         String // "Rádio" | "Televisão" | "Online"
+  tituloOriginal      String @db.Text
+  transcricao         String? @db.Text
+  urlMidia            String?
+  linkDireto          String?
+  sentimentoOriginal  String
+  dataPublicacao      DateTime
+
+  // Campos gerados por IA — null = ainda não processado (faz o papel do
+  // "cache miss" do pipeline Python).
+  resumo          String?  @db.Text
+  relevante       Boolean?
+  sentimentoFinal String?
+  secretaria      String?
+
+  // Trilha de auditoria da verificação/revisão (mesmos campos gravados
+  // hoje em historico.py).
+  revisadoPelaIa      Boolean  @default(false)
+  resumoOriginal      String?  @db.Text
+  problemaDetectado   String?  @db.Text
+  revisadoManualmente Boolean  @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([noticiaId, dataExecucao])
+  @@index([dataExecucao])
+}
