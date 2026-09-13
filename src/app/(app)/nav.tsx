@@ -7,6 +7,7 @@ const ITENS = [
   { href: "/importar", label: "Importar" },
   { href: "/revisar", label: "Revisar" },
   { href: "/exportar", label: "Exportar" },
+  { href: "/relatorio", label: "Relatório" },
 ];
 
 export function Nav() {
