@@ -18,6 +18,9 @@ export type NoticiaVM = {
   sentimentoFinal: string | null;
   secretaria: string | null;
   revisadoManualmente: boolean;
+  revisadoPelaIa: boolean;
+  resumoOriginal: string | null;
+  problemaDetectado: string | null;
 };
 
 const SENTIMENTOS = ["Positivo", "Negativo", "Neutro"];
@@ -69,6 +72,17 @@ export function NoticiaRow({ noticia }: { noticia: NoticiaVM }) {
             Sentimento: {noticia.sentimentoFinal} · Secretaria: {noticia.secretaria}
             {noticia.revisadoManualmente && " · revisado manualmente"}
           </p>
+          {noticia.revisadoPelaIa && (
+            <div className="rounded-md border border-[var(--border)] bg-[var(--muted)] p-2 text-xs">
+              <p className="font-medium">⚠️ Corrigido automaticamente pela IA</p>
+              {noticia.problemaDetectado && <p className="mt-1">{noticia.problemaDetectado}</p>}
+              {noticia.resumoOriginal && (
+                <p className="mt-1 text-[var(--muted-foreground)] italic">
+                  Original: {noticia.resumoOriginal}
+                </p>
+              )}
+            </div>
+          )}
           <button onClick={() => setEditando(true)} className="text-xs underline">
             Editar
           </button>

@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { requireUserId } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
 import { gerarClipping } from "@/lib/anthropic";
+import { verificarResumo } from "@/lib/verificacao";
 import { validarSentimento } from "@/lib/sentimento";
 import { validarSecretaria } from "@/lib/secretaria";
 import { PERSONAGEM } from "@/lib/config";
@@ -44,10 +45,28 @@ export async function processarItemAction(id: string): Promise<{ ok: boolean; me
     }
   }
 
+  // Segunda checagem por um modelo mais forte (verificacao.py) — só pra
+  // Rádio/TV relevantes, e ANTES de sentimento/secretaria, porque essas
+  // classificações devem usar o resumo já corrigido, não o original.
+  let resumoOriginal: string | null = null;
+  let problemaDetectado: string | null = null;
+  let revisadoPelaIa = false;
+
+  if (!ehOnline && relevante) {
+    const verificacao = await verificarResumo(noticia.transcricao ?? "", resumo, PERSONAGEM);
+    if (!verificacao.correto) {
+      resumoOriginal = resumo;
+      problemaDetectado = verificacao.problema ?? "";
+      revisadoPelaIa = true;
+      resumo = verificacao.resumoCorrigido || resumo;
+    }
+  }
+
   // Assimetria por tipo de veículo (processador.py): Online usa a
   // transcrição (ou o título, na ausência dela) pra sentimento/secretaria;
-  // Rádio/TV usam o resumo gerado. Itens irrelevantes de Rádio/TV não
-  // chamam a IA — sentimento mantém o original, secretaria vira "Outro".
+  // Rádio/TV usam o resumo gerado (já corrigido, se a verificação achou
+  // problema). Itens irrelevantes de Rádio/TV não chamam a IA —
+  // sentimento mantém o original, secretaria vira "Outro".
   let sentimentoFinal = noticia.sentimentoOriginal;
   let secretaria = "Outro";
 
@@ -69,7 +88,15 @@ export async function processarItemAction(id: string): Promise<{ ok: boolean; me
 
   await prisma.noticia.update({
     where: { id },
-    data: { resumo, relevante, sentimentoFinal, secretaria },
+    data: {
+      resumo,
+      relevante,
+      sentimentoFinal,
+      secretaria,
+      revisadoPelaIa,
+      resumoOriginal,
+      problemaDetectado,
+    },
   });
 
   revalidatePath("/revisar");
