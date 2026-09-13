@@ -2,6 +2,7 @@ import Link from "next/link";
 import { listarDatasExecucao, listarPorData } from "@/server/queries/noticias";
 import { NoticiaRow } from "./noticia-row";
 import { DateSelect } from "./date-select";
+import { ProcessarTodas } from "./processar-todas";
 
 export default async function RevisarPage({
   searchParams,
@@ -24,7 +25,7 @@ export default async function RevisarPage({
   }
 
   const noticias = await listarPorData(dataAtual);
-  const pendentes = noticias.filter((n) => n.resumo === null).length;
+  const idsPendentes = noticias.filter((n) => n.resumo === null).map((n) => n.id);
 
   return (
     <div className="space-y-6">
@@ -33,9 +34,12 @@ export default async function RevisarPage({
         {datas.length > 1 && <DateSelect datas={datas} atual={dataAtual} />}
       </div>
 
-      <p className="text-sm text-[var(--muted-foreground)]">
-        {noticias.length} notícia(s) — {pendentes} pendente(s) de processamento.
-      </p>
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-[var(--muted-foreground)]">
+          {noticias.length} notícia(s) — {idsPendentes.length} pendente(s) de processamento.
+        </p>
+        <ProcessarTodas ids={idsPendentes} />
+      </div>
 
       <div className="space-y-3">
         {noticias.map((noticia) => (

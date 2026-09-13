@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { requireUser } from "@/lib/dal";
 import { logoutAction } from "@/server/auth";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export const dynamic = "force-dynamic";
 
@@ -27,6 +28,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           </nav>
           <div className="flex items-center gap-3 text-sm text-[var(--muted-foreground)]">
             <span>{user.email}</span>
+            <ThemeToggle />
             <form action={logoutAction}>
               <button type="submit" className="hover:text-[var(--foreground)]">
                 Sair

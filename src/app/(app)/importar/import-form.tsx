@@ -1,6 +1,7 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRef } from "react";
+import Link from "next/link";
 import { toast } from "sonner";
 import { useAction } from "@/hooks/use-action";
 import { importarAction } from "@/server/actions/importar";
@@ -8,11 +9,11 @@ import { importarAction } from "@/server/actions/importar";
 const hoje = new Date().toISOString().slice(0, 10);
 
 export function ImportForm() {
-  const router = useRouter();
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { formAction, pending, state, errorMessage } = useAction(importarAction, {
     onSuccess: () => {
       if (state?.ok && state.message) toast.success(state.message);
-      router.push("/revisar");
+      if (textareaRef.current) textareaRef.current.value = "";
     },
   });
 
@@ -32,27 +33,37 @@ export function ImportForm() {
       </div>
 
       <div>
-        <label htmlFor="arquivo" className="block text-sm font-medium">
-          Arquivo JSON exportado (mesmo formato do mergeJson.py)
+        <label htmlFor="jsonTexto" className="block text-sm font-medium">
+          Cole o JSON exportado de uma página
         </label>
-        <input
-          id="arquivo"
-          name="arquivo"
-          type="file"
-          accept="application/json"
-          className="mt-1 block w-full text-sm"
+        <p className="mt-1 text-xs text-[var(--muted-foreground)]">
+          Mesmo fluxo de antes com o dadosPag: cole a página, importe, cole a próxima — cada
+          importação acumula sem duplicar (notícia repetida entre páginas é ignorada automaticamente).
+        </p>
+        <textarea
+          ref={textareaRef}
+          id="jsonTexto"
+          name="jsonTexto"
+          rows={12}
+          placeholder='{"result": {"clippingName": "...", "items": [...]}}'
+          className="mt-2 w-full rounded-md border border-[var(--border)] bg-[var(--card)] px-3 py-2 font-mono text-xs"
         />
       </div>
 
       {errorMessage && <p className="text-sm text-[var(--negative)]">{errorMessage}</p>}
 
-      <button
-        type="submit"
-        disabled={pending}
-        className="rounded-md bg-[var(--primary)] px-4 py-2 text-sm font-medium text-[var(--primary-foreground)] disabled:opacity-60"
-      >
-        {pending ? "Importando…" : "Importar"}
-      </button>
+      <div className="flex items-center gap-4">
+        <button
+          type="submit"
+          disabled={pending}
+          className="rounded-md bg-[var(--primary)] px-4 py-2 text-sm font-medium text-[var(--primary-foreground)] disabled:opacity-60"
+        >
+          {pending ? "Importando…" : "Importar página"}
+        </button>
+        <Link href="/revisar" className="text-sm underline">
+          Já colei tudo — ir para revisão
+        </Link>
+      </div>
     </form>
   );
 }

@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* next-themes alterna a classe .dark no <html> */
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
   --background: oklch(0.99 0.005 280);
   --foreground: oklch(0.22 0.02 280);
@@ -14,6 +17,22 @@
   --positive: oklch(0.62 0.14 155);
   --negative: oklch(0.6 0.18 25);
   --neutro: oklch(0.62 0.1 250);
+}
+
+.dark {
+  --background: oklch(0.2 0.02 280);
+  --foreground: oklch(0.94 0.01 270);
+  --card: oklch(0.25 0.02 280);
+  --muted: oklch(0.28 0.02 280);
+  --muted-foreground: oklch(0.68 0.02 270);
+  --border: oklch(0.34 0.02 280);
+
+  --primary: oklch(0.68 0.15 300);
+  --primary-foreground: oklch(0.15 0.02 300);
+
+  --positive: oklch(0.68 0.14 155);
+  --negative: oklch(0.68 0.18 25);
+  --neutro: oklch(0.7 0.1 250);
 }
 
 body {

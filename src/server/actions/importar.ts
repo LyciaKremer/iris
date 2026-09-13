@@ -7,19 +7,21 @@ import { parseClippingExport } from "@/lib/clipping";
 import type { ActionState } from "@/lib/validations";
 
 /**
- * Porta de mergeJson.py, adaptada: em vez de consolidar páginas exportadas
- * em disco, recebe o JSON já mesclado (mesmo formato de dados/prefeitura.json)
- * via upload e grava direto no banco. Dedup por (noticiaId, dataExecucao) —
- * subir o mesmo arquivo de novo não duplica itens.
+ * Porta de mergeJson.py — em vez de consolidar arquivos de página em disco
+ * (dadosPag/*.json), recebe o JSON de UMA página colado diretamente no
+ * formulário. Dedup por (noticiaId, dataExecucao) faz o papel do merge:
+ * colar a página 1, depois a página 2, depois a 3 (mesmo fluxo de ir
+ * soltando pag1.json, pag2.json... antes) acumula tudo sem duplicar, mesmo
+ * que a mesma notícia apareça em mais de uma página colada.
  */
 export async function importarAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
   await requireUserId();
 
-  const arquivo = formData.get("arquivo");
+  const jsonTexto = String(formData.get("jsonTexto") ?? "").trim();
   const dataExecucao = String(formData.get("dataExecucao") ?? "");
 
-  if (!(arquivo instanceof File) || arquivo.size === 0) {
-    return { ok: false, message: "Selecione o arquivo JSON exportado." };
+  if (!jsonTexto) {
+    return { ok: false, message: "Cole o JSON exportado da plataforma de clipping." };
   }
   if (!dataExecucao) {
     return { ok: false, message: "Informe a data do disparo." };
@@ -27,9 +29,9 @@ export async function importarAction(_prev: ActionState, formData: FormData): Pr
 
   let json: unknown;
   try {
-    json = JSON.parse(await arquivo.text());
+    json = JSON.parse(jsonTexto);
   } catch {
-    return { ok: false, message: "Arquivo não é um JSON válido." };
+    return { ok: false, message: "O texto colado não é um JSON válido." };
   }
 
   const resultado = parseClippingExport(json);
@@ -66,9 +68,11 @@ export async function importarAction(_prev: ActionState, formData: FormData): Pr
     });
   }
 
+  const totalNaData = await prisma.noticia.count({ where: { dataExecucao } });
+
   revalidatePath("/revisar");
   return {
     ok: true,
-    message: `${novos.length} notícia(s) importada(s) (${itens.length - novos.length} já existiam para essa data).`,
+    message: `+${novos.length} nova(s) (${itens.length - novos.length} já existiam nessa página) — ${totalNaData} no total em ${dataExecucao}.`,
   };
 }
