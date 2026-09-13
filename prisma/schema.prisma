@@ -69,3 +69,16 @@ model Noticia {
   @@unique([noticiaId, dataExecucao])
   @@index([dataExecucao])
 }
+
+// ─────────────────────────────────────────────────────────────
+// Checklist diário — acompanhamento manual das ações do dia (envios,
+// upload de mídia etc.), marcado no botão flutuante. Uma linha por dia;
+// guardado no banco (não localStorage) pra acompanhar de qualquer
+// lugar, igual ao resto do app.
+// ─────────────────────────────────────────────────────────────
+
+model ChecklistDia {
+  data      String   @id // "YYYY-MM-DD"
+  itens     Json // { "<chave-do-item>": true|false }
+  updatedAt DateTime @updatedAt
+}

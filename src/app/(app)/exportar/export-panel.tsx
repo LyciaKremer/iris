@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { exportarDiaAction } from "@/server/actions/exportar";
 import { formatarDataBR } from "@/lib/dates";
+import { RainbowLoader } from "@/components/rainbow-loader";
 
 export function ExportPanel({ datas }: { datas: string[] }) {
   const [dataEscolhida, setDataEscolhida] = useState(datas[0] ?? "");
@@ -53,8 +54,9 @@ export function ExportPanel({ datas }: { datas: string[] }) {
         <button
           onClick={gerar}
           disabled={pending || !dataEscolhida}
-          className="h-9 rounded-md bg-[var(--primary)] px-4 text-sm font-medium text-[var(--primary-foreground)] disabled:opacity-60"
+          className="flex h-9 items-center gap-2 rounded-md bg-[var(--primary)] px-4 text-sm font-medium text-[var(--primary-foreground)] disabled:opacity-60"
         >
+          {pending && <RainbowLoader size={14} />}
           {pending ? "Gerando…" : "Gerar mensagens"}
         </button>
       </div>

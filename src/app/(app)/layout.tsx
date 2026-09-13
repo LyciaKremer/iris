@@ -1,6 +1,8 @@
 import { requireUser } from "@/lib/dal";
 import { logoutAction } from "@/server/auth";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { ChecklistFlutuante } from "@/components/checklist-flutuante";
+import { VoltarAoTopo } from "@/components/voltar-ao-topo";
 import { Nav } from "./nav";
 
 export const dynamic = "force-dynamic";
@@ -25,6 +27,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         </div>
       </header>
       <main className="mx-auto max-w-4xl px-4 py-8">{children}</main>
+      <VoltarAoTopo />
+      <ChecklistFlutuante />
     </div>
   );
 }

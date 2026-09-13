@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useAction } from "@/hooks/use-action";
 import { loginAction } from "@/server/auth";
+import { RainbowLoader } from "@/components/rainbow-loader";
 
 export function LoginForm() {
   const router = useRouter();
@@ -49,8 +50,9 @@ export function LoginForm() {
       <button
         type="submit"
         disabled={pending}
-        className="w-full rounded-md bg-[var(--primary)] px-3 py-2 text-sm font-medium text-[var(--primary-foreground)] disabled:opacity-60"
+        className="flex w-full items-center justify-center gap-2 rounded-md bg-[var(--primary)] px-3 py-2 text-sm font-medium text-[var(--primary-foreground)] disabled:opacity-60"
       >
+        {pending && <RainbowLoader size={14} />}
         {pending ? "Entrando…" : "Entrar"}
       </button>
       <noscript>

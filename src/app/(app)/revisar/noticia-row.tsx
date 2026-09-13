@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { useAction } from "@/hooks/use-action";
 import { processarItemAction } from "@/server/actions/processar";
 import { salvarRevisaoAction } from "@/server/actions/revisar";
+import { RainbowLoader } from "@/components/rainbow-loader";
 
 export type NoticiaVM = {
   id: string;
@@ -45,8 +46,9 @@ export function NoticiaRow({ noticia }: { noticia: NoticiaVM }) {
           <button
             onClick={processar}
             disabled={pending}
-            className="shrink-0 rounded-md bg-[var(--primary)] px-3 py-1 text-xs font-medium text-[var(--primary-foreground)] disabled:opacity-60"
+            className="shrink-0 flex items-center gap-2 rounded-md bg-[var(--primary)] px-3 py-1 text-xs font-medium text-[var(--primary-foreground)] disabled:opacity-60"
           >
+            {pending && <RainbowLoader size={12} />}
             {pending ? "Processando…" : "Processar"}
           </button>
         )}
@@ -121,8 +123,9 @@ function EditForm({ noticia, onDone }: { noticia: NoticiaVM; onDone: () => void 
         <button
           type="submit"
           disabled={pending}
-          className="rounded-md bg-[var(--primary)] px-3 py-1 text-xs font-medium text-[var(--primary-foreground)] disabled:opacity-60"
+          className="flex items-center gap-2 rounded-md bg-[var(--primary)] px-3 py-1 text-xs font-medium text-[var(--primary-foreground)] disabled:opacity-60"
         >
+          {pending && <RainbowLoader size={12} />}
           {pending ? "Salvando…" : "Salvar"}
         </button>
         <button type="button" onClick={onDone} className="text-xs underline">

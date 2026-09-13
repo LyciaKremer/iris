@@ -6,6 +6,7 @@ import { calcularSemanaUtil } from "@/lib/semana";
 import { formatarDataBR } from "@/lib/dates";
 import { calcularRelatorioAction, baixarRelatorioAction } from "@/server/actions/relatorio";
 import type { RelatorioSemanal, RankingItem } from "@/lib/relatorioSemanal";
+import { RainbowLoader } from "@/components/rainbow-loader";
 
 const hoje = new Date().toISOString().slice(0, 10);
 
@@ -67,20 +68,26 @@ export function RelatorioPanel() {
         <button
           onClick={() => baixar("docx")}
           disabled={baixando !== null || !relatorio}
-          className="rounded-md bg-[var(--primary)] px-4 py-2 text-sm font-medium text-[var(--primary-foreground)] disabled:opacity-60"
+          className="flex items-center gap-2 rounded-md bg-[var(--primary)] px-4 py-2 text-sm font-medium text-[var(--primary-foreground)] disabled:opacity-60"
         >
+          {baixando === "docx" && <RainbowLoader size={14} />}
           {baixando === "docx" ? "Gerando…" : "Baixar .docx"}
         </button>
         <button
           onClick={() => baixar("pdf")}
           disabled={baixando !== null || !relatorio}
-          className="rounded-md border border-[var(--border)] px-4 py-2 text-sm font-medium disabled:opacity-60"
+          className="flex items-center gap-2 rounded-md border border-[var(--border)] px-4 py-2 text-sm font-medium disabled:opacity-60"
         >
+          {baixando === "pdf" && <RainbowLoader size={14} />}
           {baixando === "pdf" ? "Gerando…" : "Baixar PDF"}
         </button>
       </div>
 
-      {pending && <p className="text-sm text-[var(--muted-foreground)]">Calculando…</p>}
+      {pending && (
+        <p className="flex items-center gap-2 text-sm text-[var(--muted-foreground)]">
+          <RainbowLoader size={14} /> Calculando…
+        </p>
+      )}
 
       {relatorio && !pending && (
         <div className="space-y-4">

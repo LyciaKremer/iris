@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { processarItemAction } from "@/server/actions/processar";
+import { RainbowLoader } from "@/components/rainbow-loader";
 
 export function ProcessarTodas({ ids }: { ids: string[] }) {
   const router = useRouter();
@@ -37,8 +38,9 @@ export function ProcessarTodas({ ids }: { ids: string[] }) {
     <button
       onClick={processarTodas}
       disabled={pending}
-      className="rounded-md bg-[var(--primary)] px-3 py-1.5 text-sm font-medium text-[var(--primary-foreground)] disabled:opacity-60"
+      className="flex items-center gap-2 rounded-md bg-[var(--primary)] px-3 py-1.5 text-sm font-medium text-[var(--primary-foreground)] disabled:opacity-60"
     >
+      {progresso && <RainbowLoader size={14} />}
       {progresso ? `Processando ${progresso.atual}/${progresso.total}…` : `Processar todas (${ids.length})`}
     </button>
   );

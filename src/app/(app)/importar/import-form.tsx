@@ -5,6 +5,7 @@ import Link from "next/link";
 import { toast } from "sonner";
 import { useAction } from "@/hooks/use-action";
 import { importarAction } from "@/server/actions/importar";
+import { RainbowLoader } from "@/components/rainbow-loader";
 
 const hoje = new Date().toISOString().slice(0, 10);
 
@@ -56,8 +57,9 @@ export function ImportForm() {
         <button
           type="submit"
           disabled={pending}
-          className="rounded-md bg-[var(--primary)] px-4 py-2 text-sm font-medium text-[var(--primary-foreground)] disabled:opacity-60"
+          className="flex items-center gap-2 rounded-md bg-[var(--primary)] px-4 py-2 text-sm font-medium text-[var(--primary-foreground)] disabled:opacity-60"
         >
+          {pending && <RainbowLoader size={14} />}
           {pending ? "Importando…" : "Importar página"}
         </button>
         <Link href="/revisar" className="text-sm underline">
