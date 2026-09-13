@@ -20,7 +20,9 @@ export default async function ExportarPage() {
     <div className="space-y-6">
       <h1 className="text-xl font-semibold">Exportar pro disparo local</h1>
       <p className="text-sm text-[var(--muted-foreground)]">
-        Gera o JSON de mensagens no formato que o script local (main.py / whatsapp.py) vai consumir pra disparar.
+        Gera o JSON de mensagens no formato que o script local (main.py / whatsapp.py) vai
+        consumir pra disparar. Só funciona depois que todas as notícias da data já foram
+        processadas em "Revisar".
       </p>
       <ExportPanel datas={datas} />
     </div>

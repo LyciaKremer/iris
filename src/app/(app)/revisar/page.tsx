@@ -3,6 +3,7 @@ import { listarDatasExecucao, listarPorData } from "@/server/queries/noticias";
 import { NoticiaRow } from "./noticia-row";
 import { DateSelect } from "./date-select";
 import { ProcessarTodas } from "./processar-todas";
+import { formatarDataBR } from "@/lib/dates";
 
 export default async function RevisarPage({
   searchParams,
@@ -30,9 +31,14 @@ export default async function RevisarPage({
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold">Revisar — {dataAtual}</h1>
+        <h1 className="text-xl font-semibold">Revisar — {formatarDataBR(dataAtual)}</h1>
         {datas.length > 1 && <DateSelect datas={datas} atual={dataAtual} />}
       </div>
+
+      <p className="text-sm text-[var(--muted-foreground)]">
+        "Processar" gera o resumo, sentimento e secretaria via IA a partir da transcrição. Você
+        pode corrigir qualquer campo manualmente depois em "Editar".
+      </p>
 
       <div className="flex items-center justify-between">
         <p className="text-sm text-[var(--muted-foreground)]">

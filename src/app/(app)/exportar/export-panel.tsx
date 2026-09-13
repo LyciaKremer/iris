@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { exportarDiaAction } from "@/server/actions/exportar";
+import { formatarDataBR } from "@/lib/dates";
 
 export function ExportPanel({ datas }: { datas: string[] }) {
   const [dataEscolhida, setDataEscolhida] = useState(datas[0] ?? "");
@@ -40,11 +41,11 @@ export function ExportPanel({ datas }: { datas: string[] }) {
           <select
             value={dataEscolhida}
             onChange={(e) => setDataEscolhida(e.target.value)}
-            className="mt-1 rounded-md border border-[var(--border)] bg-[var(--card)] px-2 py-1 text-sm"
+            className="mt-1 h-9 rounded-md border border-[var(--border)] bg-[var(--card)] px-2 text-sm"
           >
             {datas.map((d) => (
               <option key={d} value={d}>
-                {d}
+                {formatarDataBR(d)}
               </option>
             ))}
           </select>
@@ -52,7 +53,7 @@ export function ExportPanel({ datas }: { datas: string[] }) {
         <button
           onClick={gerar}
           disabled={pending || !dataEscolhida}
-          className="rounded-md bg-[var(--primary)] px-4 py-2 text-sm font-medium text-[var(--primary-foreground)] disabled:opacity-60"
+          className="h-9 rounded-md bg-[var(--primary)] px-4 text-sm font-medium text-[var(--primary-foreground)] disabled:opacity-60"
         >
           {pending ? "Gerando…" : "Gerar mensagens"}
         </button>
