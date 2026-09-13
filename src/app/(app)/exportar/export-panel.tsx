@@ -23,15 +23,27 @@ export function ExportPanel({ datas }: { datas: string[] }) {
     });
   }
 
+  const nomeArquivo = `mensagens_${dataEscolhida}.json`;
+  const comando = `python disparar_mensagens.py ${nomeArquivo}`;
+
   function baixar() {
     if (!mensagens) return;
     const blob = new Blob([JSON.stringify(mensagens, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `mensagens_${dataEscolhida}.json`;
+    a.download = nomeArquivo;
     a.click();
     URL.revokeObjectURL(url);
+  }
+
+  async function copiarComando() {
+    try {
+      await navigator.clipboard.writeText(comando);
+      toast.success("Comando copiado.");
+    } catch {
+      toast.error("Não consegui copiar — copie manualmente.");
+    }
   }
 
   return (
@@ -69,6 +81,17 @@ export function ExportPanel({ datas }: { datas: string[] }) {
               Baixar JSON
             </button>
           </div>
+
+          <div className="flex items-center justify-between gap-2 rounded-md border border-[var(--border)] bg-[var(--muted)] p-3">
+            <code className="overflow-x-auto whitespace-nowrap text-xs">{comando}</code>
+            <button
+              onClick={copiarComando}
+              className="shrink-0 rounded-md border border-[var(--border)] bg-[var(--card)] px-3 py-1 text-xs"
+            >
+              Copiar comando
+            </button>
+          </div>
+
           <div className="space-y-2">
             {mensagens.map((m, i) => (
               <pre
