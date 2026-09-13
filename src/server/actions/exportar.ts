@@ -5,30 +5,46 @@ import { prisma } from "@/lib/prisma";
 import { montarMensagens } from "@/lib/formatador";
 import { montarExportVendor } from "@/lib/vendorExport";
 import { PERSONAGEM } from "@/lib/config";
+import { calcularPeriodo, type Horario } from "@/lib/horarios";
 
 /**
  * Gera a lista de mensagens no formato final de envio — o mesmo formato
- * que formatador.py produz localmente. O script local (main.py) passa a
- * ler esse JSON exportado em vez de gerar as mensagens ele mesmo; a lógica
- * de disparo no WhatsApp (whatsapp.py) não muda.
+ * que formatador.py produz localmente. O script local
+ * (disparar_mensagens.py) só lê esse JSON exportado e dispara; nenhuma
+ * lógica de negócio mora mais lá.
+ *
+ * Filtra por PERÍODO DE PUBLICAÇÃO (não por dataExecucao) — os 4 envios
+ * diários da PMJP (08h/09h30/14h/18h) são recortes de horário sobre a
+ * base inteira, igual ao pipeline local original (clipping.py filtrava
+ * por `Data de publicação`, não por qual dia a notícia foi importada).
+ * Só Rádio/TV entram — a PMJP não recebe cobertura Online.
  */
-export async function exportarDiaAction(
-  dataExecucao: string,
+export async function exportarPorHorarioAction(
+  data: string,
+  horario: Horario,
 ): Promise<{ ok: boolean; mensagens?: string[]; message?: string }> {
   await requireUserId();
 
-  if (!dataExecucao) return { ok: false, message: "Informe a data." };
+  if (!data) return { ok: false, message: "Informe a data." };
 
-  const noticias = await prisma.noticia.findMany({ where: { dataExecucao } });
+  const { inicio, fim } = calcularPeriodo(data, horario);
+
+  const noticias = await prisma.noticia.findMany({
+    where: {
+      tipoVeiculo: { in: ["Rádio", "Televisão"] },
+      dataPublicacao: { gte: inicio, lte: fim },
+    },
+  });
+
   if (noticias.length === 0) {
-    return { ok: false, message: "Nenhuma notícia encontrada para essa data." };
+    return { ok: false, message: "Nenhuma notícia encontrada nesse período." };
   }
 
   const naoProcessadas = noticias.filter((n) => n.resumo === null);
   if (naoProcessadas.length > 0) {
     return {
       ok: false,
-      message: `Ainda há ${naoProcessadas.length} notícia(s) não processada(s) — processe todas antes de exportar.`,
+      message: `Ainda há ${naoProcessadas.length} notícia(s) não processada(s) nesse período — processe em "Revisar" antes de exportar.`,
     };
   }
 

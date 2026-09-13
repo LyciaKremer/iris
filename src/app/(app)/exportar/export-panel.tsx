@@ -2,19 +2,22 @@
 
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
-import { exportarDiaAction } from "@/server/actions/exportar";
-import { formatarDataBR } from "@/lib/dates";
+import { exportarPorHorarioAction } from "@/server/actions/exportar";
+import { HORARIOS, type Horario } from "@/lib/horarios";
 import { RainbowLoader } from "@/components/rainbow-loader";
 
-export function ExportPanel({ datas }: { datas: string[] }) {
-  const [dataEscolhida, setDataEscolhida] = useState(datas[0] ?? "");
+const hoje = new Date().toISOString().slice(0, 10);
+
+export function ExportPanel() {
+  const [data, setData] = useState(hoje);
+  const [horario, setHorario] = useState<Horario>("08h");
   const [mensagens, setMensagens] = useState<string[] | null>(null);
   const [pending, startTransition] = useTransition();
 
   function gerar() {
     setMensagens(null);
     startTransition(async () => {
-      const resultado = await exportarDiaAction(dataEscolhida);
+      const resultado = await exportarPorHorarioAction(data, horario);
       if (!resultado.ok) {
         toast.error(resultado.message ?? "Falha ao exportar.");
         return;
@@ -23,7 +26,7 @@ export function ExportPanel({ datas }: { datas: string[] }) {
     });
   }
 
-  const nomeArquivo = `mensagens_${dataEscolhida}.json`;
+  const nomeArquivo = `mensagens_${data}_${horario}.json`;
   const comando = `python disparar_mensagens.py ${nomeArquivo}`;
 
   function baixar() {
@@ -50,28 +53,42 @@ export function ExportPanel({ datas }: { datas: string[] }) {
     <div className="space-y-4">
       <div className="flex items-end gap-2">
         <div>
-          <label className="block text-sm font-medium">Data</label>
+          <label className="block text-sm font-medium">Data do disparo</label>
+          <input
+            type="date"
+            value={data}
+            onChange={(e) => setData(e.target.value)}
+            className="mt-1 h-9 rounded-md border border-[var(--border)] bg-[var(--card)] px-2 text-sm"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium">Envio</label>
           <select
-            value={dataEscolhida}
-            onChange={(e) => setDataEscolhida(e.target.value)}
+            value={horario}
+            onChange={(e) => setHorario(e.target.value as Horario)}
             className="mt-1 h-9 rounded-md border border-[var(--border)] bg-[var(--card)] px-2 text-sm"
           >
-            {datas.map((d) => (
-              <option key={d} value={d}>
-                {formatarDataBR(d)}
+            {HORARIOS.map((h) => (
+              <option key={h} value={h}>
+                {h}
               </option>
             ))}
           </select>
         </div>
         <button
           onClick={gerar}
-          disabled={pending || !dataEscolhida}
+          disabled={pending || !data}
           className="flex h-9 items-center gap-2 rounded-md bg-[var(--primary)] px-4 text-sm font-medium text-[var(--primary-foreground)] disabled:opacity-60"
         >
           {pending && <RainbowLoader size={14} />}
           {pending ? "Gerando…" : "Gerar mensagens"}
         </button>
       </div>
+
+      <p className="text-xs text-[var(--muted-foreground)]">
+        08h: madrugada (00h–08h) · 09h30: residual da noite anterior (17h–23h59 do dia anterior) ·
+        14h: manhã (08h–14h) · 18h: tarde (14h–18h).
+      </p>
 
       {mensagens && (
         <div className="space-y-3">
