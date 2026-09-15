@@ -6,6 +6,7 @@ import { useAction } from "@/hooks/use-action";
 import { processarItemAction } from "@/server/actions/processar";
 import { salvarRevisaoAction } from "@/server/actions/revisar";
 import { RainbowLoader } from "@/components/rainbow-loader";
+import { formatarDataHoraBR } from "@/lib/dates";
 
 export type NoticiaVM = {
   id: string;
@@ -13,6 +14,7 @@ export type NoticiaVM = {
   tipoVeiculo: string;
   tituloOriginal: string;
   sentimentoOriginal: string;
+  dataPublicacao: Date;
   resumo: string | null;
   relevante: boolean | null;
   sentimentoFinal: string | null;
@@ -43,7 +45,9 @@ export function NoticiaRow({ noticia }: { noticia: NoticiaVM }) {
       <div className="flex items-start justify-between gap-4">
         <div className="text-sm">
           <span className="font-medium">{noticia.veiculo}</span>{" "}
-          <span className="text-[var(--muted-foreground)]">· {noticia.tipoVeiculo}</span>
+          <span className="text-[var(--muted-foreground)]">
+            · {noticia.tipoVeiculo} · {formatarDataHoraBR(noticia.dataPublicacao)}
+          </span>
         </div>
         {!processado && (
           <button
