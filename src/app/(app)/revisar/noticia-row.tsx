@@ -69,7 +69,8 @@ export function NoticiaRow({ noticia }: { noticia: NoticiaVM }) {
             <p>{noticia.resumo}</p>
           )}
           <p className="text-xs text-[var(--muted-foreground)]">
-            Sentimento: {noticia.sentimentoFinal} · Secretaria: {noticia.secretaria}
+            Relevante: {noticia.relevante ? "sim" : "não"} · Sentimento: {noticia.sentimentoFinal} · Secretaria:{" "}
+            {noticia.secretaria}
             {noticia.revisadoManualmente && " · revisado manualmente"}
           </p>
           {noticia.revisadoPelaIa && (
