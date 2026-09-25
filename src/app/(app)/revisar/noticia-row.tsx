@@ -124,18 +124,29 @@ export function NoticiaRow({ noticia }: { noticia: NoticiaVM }) {
             </div>
           )}
 
-          <div className="flex flex-wrap items-center gap-3 text-xs">
-            <button onClick={() => setEditando(true)} className="underline">
+          <div className="flex flex-wrap items-center gap-2 text-xs">
+            <button
+              onClick={() => setEditando(true)}
+              className="rounded-md border border-[var(--border)] px-2.5 py-1 font-medium hover:bg-[var(--muted)]"
+            >
               Editar
             </button>
             {noticia.transcricao && (
-              <button onClick={() => setMostrarTranscricao((v) => !v)} className="underline">
-                {mostrarTranscricao ? "Ocultar transcrição original" : "Ver transcrição original"}
+              <button
+                onClick={() => setMostrarTranscricao((v) => !v)}
+                className="rounded-md border border-[var(--border)] px-2.5 py-1 font-medium hover:bg-[var(--muted)]"
+              >
+                {mostrarTranscricao ? "Ocultar transcrição" : "Ver transcrição"}
               </button>
             )}
             {noticia.urlMidia && (
-              <a href={noticia.urlMidia} target="_blank" rel="noopener noreferrer" className="underline">
-                Abrir mídia original
+              <a
+                href={noticia.urlMidia}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="rounded-md border border-[var(--border)] px-2.5 py-1 font-medium hover:bg-[var(--muted)]"
+              >
+                Abrir mídia ↗
               </a>
             )}
           </div>
