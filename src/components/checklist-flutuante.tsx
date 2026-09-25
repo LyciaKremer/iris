@@ -5,14 +5,13 @@ import { toast } from "sonner";
 import { itensDoDia } from "@/lib/checklist";
 import { obterChecklistAction, alternarItemChecklistAction } from "@/server/actions/checklist";
 import { RainbowLoader } from "@/components/rainbow-loader";
-
-const hoje = () => new Date().toISOString().slice(0, 10);
+import { hojeBR } from "@/lib/dates";
 
 export function ChecklistFlutuante() {
   const [aberto, setAberto] = useState(false);
   const [carregando, setCarregando] = useState(false);
   const [itens, setItens] = useState<Record<string, boolean>>({});
-  const data = hoje();
+  const data = hojeBR();
   const lista = itensDoDia(data);
 
   useEffect(() => {

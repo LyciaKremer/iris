@@ -15,6 +15,8 @@ export type NoticiaVM = {
   tituloOriginal: string;
   sentimentoOriginal: string;
   dataPublicacao: Date;
+  transcricao: string | null;
+  urlMidia: string | null;
   resumo: string | null;
   relevante: boolean | null;
   sentimentoFinal: string | null;
@@ -27,11 +29,35 @@ export type NoticiaVM = {
 
 const SENTIMENTOS = ["Positivo", "Negativo", "Neutro"];
 
+function corSentimento(sentimento: string | null): string {
+  if (sentimento === "Positivo") return "var(--positive)";
+  if (sentimento === "Negativo") return "var(--negative)";
+  return "var(--neutro)";
+}
+
+function Badge({ cor, children }: { cor: string; children: React.ReactNode }) {
+  return (
+    <span
+      className="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium"
+      style={{ borderColor: cor, color: cor }}
+    >
+      {children}
+    </span>
+  );
+}
+
 export function NoticiaRow({ noticia }: { noticia: NoticiaVM }) {
   const [pending, startTransition] = useTransition();
   const [editando, setEditando] = useState(false);
+  const [mostrarTranscricao, setMostrarTranscricao] = useState(false);
 
   const processado = noticia.resumo !== null;
+  const naoRelevante = noticia.relevante === false;
+  const corBorda = processado
+    ? naoRelevante
+      ? "var(--border)"
+      : corSentimento(noticia.sentimentoFinal)
+    : "var(--border)";
 
   function processar() {
     startTransition(async () => {
@@ -41,7 +67,10 @@ export function NoticiaRow({ noticia }: { noticia: NoticiaVM }) {
   }
 
   return (
-    <div className="rounded-md border border-[var(--border)] p-4">
+    <div
+      className="rounded-md border border-l-4 border-[var(--border)] p-4"
+      style={{ borderLeftColor: corBorda }}
+    >
       <div className="flex items-start justify-between gap-4">
         <div className="text-sm">
           <span className="font-medium">{noticia.veiculo}</span>{" "}
@@ -66,21 +95,27 @@ export function NoticiaRow({ noticia }: { noticia: NoticiaVM }) {
       ) : editando ? (
         <EditForm noticia={noticia} onDone={() => setEditando(false)} />
       ) : (
-        <div className="mt-2 space-y-1 text-sm">
-          {noticia.relevante === false ? (
+        <div className="mt-2 space-y-2 text-sm">
+          <div className="flex flex-wrap items-center gap-1.5">
+            {naoRelevante ? (
+              <Badge cor="var(--muted-foreground)">Não relevante</Badge>
+            ) : (
+              <Badge cor={corSentimento(noticia.sentimentoFinal)}>{noticia.sentimentoFinal}</Badge>
+            )}
+            <Badge cor="var(--muted-foreground)">{noticia.secretaria}</Badge>
+            {noticia.revisadoManualmente && <Badge cor="var(--muted-foreground)">revisado manualmente</Badge>}
+            {noticia.revisadoPelaIa && <Badge cor="var(--muted-foreground)">⚠️ corrigido pela IA</Badge>}
+          </div>
+
+          {naoRelevante ? (
             <p className="text-[var(--muted-foreground)] italic">Sem informação relevante.</p>
           ) : (
             <p>{noticia.resumo}</p>
           )}
-          <p className="text-xs text-[var(--muted-foreground)]">
-            Relevante: {noticia.relevante ? "sim" : "não"} · Sentimento: {noticia.sentimentoFinal} · Secretaria:{" "}
-            {noticia.secretaria}
-            {noticia.revisadoManualmente && " · revisado manualmente"}
-          </p>
-          {noticia.revisadoPelaIa && (
+
+          {noticia.revisadoPelaIa && (noticia.problemaDetectado || noticia.resumoOriginal) && (
             <div className="rounded-md border border-[var(--border)] bg-[var(--muted)] p-2 text-xs">
-              <p className="font-medium">⚠️ Corrigido automaticamente pela IA</p>
-              {noticia.problemaDetectado && <p className="mt-1">{noticia.problemaDetectado}</p>}
+              {noticia.problemaDetectado && <p>{noticia.problemaDetectado}</p>}
               {noticia.resumoOriginal && (
                 <p className="mt-1 text-[var(--muted-foreground)] italic">
                   Original: {noticia.resumoOriginal}
@@ -88,9 +123,28 @@ export function NoticiaRow({ noticia }: { noticia: NoticiaVM }) {
               )}
             </div>
           )}
-          <button onClick={() => setEditando(true)} className="text-xs underline">
-            Editar
-          </button>
+
+          <div className="flex flex-wrap items-center gap-3 text-xs">
+            <button onClick={() => setEditando(true)} className="underline">
+              Editar
+            </button>
+            {noticia.transcricao && (
+              <button onClick={() => setMostrarTranscricao((v) => !v)} className="underline">
+                {mostrarTranscricao ? "Ocultar transcrição original" : "Ver transcrição original"}
+              </button>
+            )}
+            {noticia.urlMidia && (
+              <a href={noticia.urlMidia} target="_blank" rel="noopener noreferrer" className="underline">
+                Abrir mídia original
+              </a>
+            )}
+          </div>
+
+          {mostrarTranscricao && noticia.transcricao && (
+            <p className="whitespace-pre-wrap rounded-md border border-[var(--border)] bg-[var(--muted)] p-2 text-xs text-[var(--muted-foreground)]">
+              {noticia.transcricao}
+            </p>
+          )}
         </div>
       )}
     </div>

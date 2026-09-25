@@ -6,8 +6,7 @@ import { toast } from "sonner";
 import { useAction } from "@/hooks/use-action";
 import { importarAction } from "@/server/actions/importar";
 import { RainbowLoader } from "@/components/rainbow-loader";
-
-const hoje = new Date().toISOString().slice(0, 10);
+import { hojeBR } from "@/lib/dates";
 
 export function ImportForm() {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -28,7 +27,7 @@ export function ImportForm() {
           id="dataExecucao"
           name="dataExecucao"
           type="date"
-          defaultValue={hoje}
+          defaultValue={hojeBR()}
           className="mt-1 rounded-md border border-[var(--border)] bg-[var(--card)] px-3 py-2 text-sm"
         />
       </div>
@@ -53,7 +52,13 @@ export function ImportForm() {
 
       {errorMessage && <p className="text-sm text-[var(--negative)]">{errorMessage}</p>}
 
-      <div className="flex items-center gap-4">
+      <div className="flex items-center justify-end gap-3">
+        <Link
+          href="/revisar"
+          className="rounded-md border border-[var(--border)] px-4 py-2 text-sm font-medium hover:bg-[var(--muted)]"
+        >
+          Já colei tudo — ir para revisão
+        </Link>
         <button
           type="submit"
           disabled={pending}
@@ -62,9 +67,6 @@ export function ImportForm() {
           {pending && <RainbowLoader size={14} />}
           {pending ? "Importando…" : "Importar página"}
         </button>
-        <Link href="/revisar" className="text-sm underline">
-          Já colei tudo — ir para revisão
-        </Link>
       </div>
     </form>
   );

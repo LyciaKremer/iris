@@ -5,11 +5,10 @@ import { toast } from "sonner";
 import { exportarPorHorarioAction } from "@/server/actions/exportar";
 import { HORARIOS, type Horario } from "@/lib/horarios";
 import { RainbowLoader } from "@/components/rainbow-loader";
-
-const hoje = new Date().toISOString().slice(0, 10);
+import { hojeBR } from "@/lib/dates";
 
 export function ExportPanel() {
-  const [data, setData] = useState(hoje);
+  const [data, setData] = useState(hojeBR);
   const [horario, setHorario] = useState<Horario>("08h");
   const [mensagens, setMensagens] = useState<string[] | null>(null);
   const [pending, startTransition] = useTransition();

@@ -3,15 +3,13 @@
 import { useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
 import { calcularSemanaUtil } from "@/lib/semana";
-import { formatarDataBR } from "@/lib/dates";
+import { formatarDataBR, hojeBR } from "@/lib/dates";
 import { calcularRelatorioAction, baixarRelatorioAction } from "@/server/actions/relatorio";
 import type { RelatorioSemanal, RankingItem } from "@/lib/relatorioSemanal";
 import { RainbowLoader } from "@/components/rainbow-loader";
 
-const hoje = new Date().toISOString().slice(0, 10);
-
 export function RelatorioPanel() {
-  const [dataReferencia, setDataReferencia] = useState(hoje);
+  const [dataReferencia, setDataReferencia] = useState(hojeBR);
   const [relatorio, setRelatorio] = useState<RelatorioSemanal | null>(null);
   const [pending, startTransition] = useTransition();
   const [baixando, setBaixando] = useState<"docx" | "pdf" | null>(null);

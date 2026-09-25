@@ -19,3 +19,23 @@ export function formatarDataHoraBR(data: Date): string {
     minute: "2-digit",
   }).format(data);
 }
+
+/** Converte um instante (Date) pro "YYYY-MM-DD" do dia correspondente em
+ * Brasília — NUNCA usar `data.toISOString().slice(0, 10)` pra isso: isso
+ * pega o dia em UTC, que já virou o dia seguinte entre ~21h e meia-noite
+ * no horário de Brasília (ex: checklist mostrando o dia errado à noite). */
+export function formatarDataISO(data: Date): string {
+  const partes = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Sao_Paulo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(data);
+  const mapa = Object.fromEntries(partes.map((p) => [p.type, p.value]));
+  return `${mapa.year}-${mapa.month}-${mapa.day}`;
+}
+
+/** Data de hoje ("YYYY-MM-DD") no calendário de Brasília. */
+export function hojeBR(): string {
+  return formatarDataISO(new Date());
+}

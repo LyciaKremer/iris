@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { buscarNoticiasAction } from "@/server/actions/auditoria";
-import { formatarDataBR } from "@/lib/dates";
+import { formatarDataHoraBR } from "@/lib/dates";
 import { RainbowLoader } from "@/components/rainbow-loader";
 
 type Resultado = Awaited<ReturnType<typeof buscarNoticiasAction>>[number];
@@ -65,7 +65,7 @@ function DetalheNoticia({ noticia }: { noticia: Resultado }) {
         <span>
           <span className="font-medium">{noticia.veiculo}</span>{" "}
           <span className="text-[var(--muted-foreground)]">
-            · {noticia.tipoVeiculo} · {formatarDataBR(noticia.dataPublicacao.toISOString().slice(0, 10))}
+            · {noticia.tipoVeiculo} · {formatarDataHoraBR(noticia.dataPublicacao)}
           </span>
         </span>
         <span className="text-xs text-[var(--muted-foreground)]">{aberto ? "▲" : "▼"}</span>
@@ -79,6 +79,19 @@ function DetalheNoticia({ noticia }: { noticia: Resultado }) {
           <Campo label="Secretaria" valor={noticia.secretaria ?? "—"} />
           <Campo label="Relevante" valor={noticia.relevante === null ? "ainda não processado" : noticia.relevante ? "sim" : "não"} />
           <Campo label="Revisado manualmente" valor={noticia.revisadoManualmente ? "sim" : "não"} />
+          {noticia.urlMidia && (
+            <p>
+              <span className="font-medium text-[var(--muted-foreground)]">Mídia:</span>{" "}
+              <a
+                href={noticia.urlMidia}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline"
+              >
+                abrir áudio/vídeo original
+              </a>
+            </p>
+          )}
 
           {noticia.revisadoPelaIa && (
             <div className="rounded-md border border-[var(--border)] bg-[var(--muted)] p-2">

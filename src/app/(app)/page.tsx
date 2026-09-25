@@ -1,9 +1,9 @@
 import Link from "next/link";
-import { listarDatasExecucao } from "@/server/queries/noticias";
+import { listarResumoPorData } from "@/server/queries/noticias";
 import { formatarDataBR } from "@/lib/dates";
 
 export default async function DashboardPage() {
-  const datas = await listarDatasExecucao();
+  const dias = await listarResumoPorData();
 
   return (
     <div className="space-y-6">
@@ -26,19 +26,47 @@ export default async function DashboardPage() {
       </div>
 
       <div>
-        <h2 className="mb-2 text-sm font-medium text-[var(--muted-foreground)]">Datas com notícias importadas</h2>
-        {datas.length === 0 ? (
+        <h2 className="mb-2 text-sm font-medium text-[var(--muted-foreground)]">Dias importados</h2>
+        {dias.length === 0 ? (
           <p className="text-sm text-[var(--muted-foreground)]">Nenhuma importação ainda.</p>
         ) : (
-          <ul className="space-y-1 text-sm">
-            {datas.map((data) => (
-              <li key={data}>
-                <Link href={`/revisar?data=${data}`} className="underline">
-                  {formatarDataBR(data)}
-                </Link>
-              </li>
-            ))}
-          </ul>
+          <div className="space-y-2">
+            {dias.map((dia) => {
+              const tudoPronto = dia.pendentes === 0;
+              return (
+                <div
+                  key={dia.dataExecucao}
+                  className="flex items-center justify-between rounded-md border border-[var(--border)] p-3"
+                >
+                  <div>
+                    <p className="text-sm font-medium">{formatarDataBR(dia.dataExecucao)}</p>
+                    <p className="text-xs text-[var(--muted-foreground)]">
+                      {dia.total} notícia(s)
+                      {tudoPronto ? (
+                        <span className="text-[var(--positive)]"> · tudo processado</span>
+                      ) : (
+                        <span className="text-[var(--negative)]"> · {dia.pendentes} pendente(s)</span>
+                      )}
+                    </p>
+                  </div>
+                  <div className="flex gap-2 text-sm">
+                    <Link
+                      href={`/revisar?data=${dia.dataExecucao}`}
+                      className="rounded-md border border-[var(--border)] px-3 py-1 hover:bg-[var(--muted)]"
+                    >
+                      Revisar
+                    </Link>
+                    <Link
+                      href="/exportar"
+                      className="rounded-md border border-[var(--border)] px-3 py-1 hover:bg-[var(--muted)]"
+                    >
+                      Exportar
+                    </Link>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         )}
       </div>
     </div>
