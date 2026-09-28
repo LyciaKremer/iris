@@ -9,7 +9,7 @@ import {
   gerarRelatorioGeralDocx,
   type DadosCandidatoRelatorio,
 } from "@/lib/relatorioGraficosDocx";
-import { gerarSecoesCandidato, gerarSecoesComparativo, type SecaoGrafico } from "@/lib/relatorioGraficosSvg";
+import { gerarSecoesCandidato, gerarSecoesComparativo, type SecaoGrafico } from "@/lib/relatorioGraficosDados";
 import { hojeBR } from "@/lib/dates";
 
 type ResultadoRelatorio = { ok: true; arquivoBase64: string; filename: string } | { ok: false; message: string };
@@ -91,9 +91,9 @@ export type ResultadoGraficos =
   | { ok: true; comparativo: SecaoGrafico[]; porCandidato: { nome: string; secoes: SecaoGrafico[] }[] }
   | { ok: false; message: string };
 
-/** Mesmos dados do relatório, mas devolvidos como SVG pra exibir direto na
- * tela — sem passar por rasterização/PNG, então sem o risco de
- * compatibilidade que a versão em .docx com gráfico teve. */
+/** Mesmos dados do relatório, mas devolvidos como especificação estruturada
+ * (não string de SVG) — quem desenha é o componente React
+ * (src/components/charts), que herda fonte/cor do resto do app. */
 export async function gerarGraficosAction(
   candidatoIds: string[],
   dias: number,

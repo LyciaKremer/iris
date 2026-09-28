@@ -18,6 +18,12 @@
   --positive: oklch(0.62 0.14 155);
   --negative: oklch(0.6 0.18 25);
   --neutro: oklch(0.62 0.1 250);
+
+  /* Paleta categórica pra gráfico (identidade, não status) — 3 matizes
+     validadas (skill de dataviz: separação CVD + contraste vs. superfície). */
+  --chart-1: #2a78d6; /* azul */
+  --chart-2: #eb6834; /* laranja */
+  --chart-3: #1baf7a; /* água */
 }
 
 .dark {
@@ -34,6 +40,10 @@
   --positive: oklch(0.68 0.14 155);
   --negative: oklch(0.68 0.18 25);
   --neutro: oklch(0.7 0.1 250);
+
+  --chart-1: #3987e5;
+  --chart-2: #d95926;
+  --chart-3: #199e70;
 }
 
 body {

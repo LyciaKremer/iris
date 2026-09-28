@@ -8,7 +8,8 @@ import {
   gerarGraficosAction,
 } from "@/server/actions/relatorioGeral";
 import { RainbowLoader } from "@/components/rainbow-loader";
-import type { SecaoGrafico } from "@/lib/relatorioGraficosSvg";
+import { GraficoRenderer } from "@/components/charts/GraficoRenderer";
+import type { SecaoGrafico } from "@/lib/relatorioGraficosDados";
 
 type CandidatoOpcao = { id: string; nome: string };
 type GraficosOk = { comparativo: SecaoGrafico[]; porCandidato: { nome: string; secoes: SecaoGrafico[] }[] };
@@ -181,11 +182,11 @@ export function RelatorioGeralPanel({ candidatos }: { candidatos: CandidatoOpcao
   );
 }
 
-function Grafico({ secao }: { secao: { titulo: string; svg: string } }) {
+function Grafico({ secao }: { secao: SecaoGrafico }) {
   return (
-    <div
-      className="overflow-x-auto rounded-md border border-[var(--border)] p-2"
-      dangerouslySetInnerHTML={{ __html: secao.svg }}
-    />
+    <div className="space-y-3 rounded-md border border-[var(--border)] bg-[var(--card)] p-4">
+      <h3 className="text-sm font-semibold">{secao.titulo}</h3>
+      <GraficoRenderer grafico={secao.grafico} />
+    </div>
   );
 }
