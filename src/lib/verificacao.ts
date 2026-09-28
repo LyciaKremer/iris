@@ -1,5 +1,6 @@
 import "server-only";
 import { askClaude, prepararTranscricao } from "@/lib/anthropic";
+import type { TipoCandidato } from "@/lib/anthropic";
 
 // Modelo mais forte que o de geração, de propósito — não é o mesmo
 // "cérebro" se auto-validando, é uma segunda opinião de um modelo melhor.
@@ -16,6 +17,18 @@ function extrairJson(resposta: string): unknown {
   return JSON.parse(semFences);
 }
 
+/** Só a frase de abertura muda por tipo — o resto do prompt (o que checar)
+ * é o mesmo. Pra "pessoa" é uma porta fiel de verificar_resumo()
+ * (alertas-wpp/verificacao.py): "revisor de clipping político", que
+ * contextualiza o modelo pro tipo de erro de atribuição mais comum nesse
+ * domínio (fala de um entrevistado atribuída ao candidato citado). Pra
+ * "instituicao" mantém o enquadramento institucional que o Iris já usava. */
+function aberturaPrompt(personagem: string, tipo: TipoCandidato): string {
+  return tipo === "pessoa"
+    ? `Você é um revisor de clipping político. Abaixo estão a transcrição original e um resumo gerado a partir dela sobre o personagem ${personagem}.`
+    : `Você é um revisor de clipping da ${personagem}. Abaixo estão a transcrição original e um resumo gerado a partir dela.`;
+}
+
 /**
  * Porta de verificar_resumo() (verificacao.py) — sem cache interno (quem
  * chama decide se guarda o resultado). Em caso de qualquer falha (API,
@@ -27,10 +40,11 @@ export async function verificarResumo(
   transcricao: string,
   resumo: string,
   personagem: string,
+  tipo: TipoCandidato,
 ): Promise<ResultadoVerificacao> {
   const texto = prepararTranscricao(transcricao);
 
-  const prompt = `Você é um revisor de clipping da ${personagem}. Abaixo estão a transcrição original e um resumo gerado a partir dela.
+  const prompt = `${aberturaPrompt(personagem, tipo)}
 
 Verifique se o resumo é fiel à transcrição, checando especialmente:
 - Se os nomes de pessoas citadas não foram trocados ou inventados
@@ -49,7 +63,14 @@ Se houver problema, responda APENAS com: {"correto": false, "problema": "<explic
 Nada além do JSON, sem comentários adicionais.`;
 
   try {
-    const resposta = await askClaude(prompt, 2000, MODELO_VERIFICACAO);
+    // max_tokens generoso: o "thinking" adaptativo do Sonnet 5 consome
+    // parte do orçamento antes da resposta final — 2000 se mostrou curto
+    // demais em casos reais (o mesmo aconteceu em alertas-wpp/verificacao.py,
+    // que por isso já usa 8000): a resposta truncava ainda durante o
+    // "thinking", askClaude() lançava erro, e o catch abaixo então
+    // fail-abria como "correto" — ou seja, a verificação nunca rodava de
+    // fato pra esses casos, e o resumo com erro passava sem revisão.
+    const resposta = await askClaude(prompt, 8000, MODELO_VERIFICACAO);
     const resultado = extrairJson(resposta) as Record<string, unknown>;
 
     if (typeof resultado.correto !== "boolean") {

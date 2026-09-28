@@ -29,7 +29,12 @@ export default async function CandidatosPage() {
       </div>
 
       <ProcessamentoLote
-        candidatos={ativos.map((c) => ({ id: c.id, slug: c.slug, nome: c.nome }))}
+        candidatos={ativos.map((c) => ({
+          id: c.id,
+          slug: c.slug,
+          nome: c.nome,
+          tipo: c.tipo as "pessoa" | "instituicao",
+        }))}
       />
     </div>
   );

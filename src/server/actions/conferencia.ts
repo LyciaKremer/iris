@@ -5,6 +5,7 @@ import { prepararExportacao } from "@/lib/prepararExportacao";
 import { montarMensagensPorSentimento } from "@/lib/formatador";
 import { formatarDataISO } from "@/lib/dates";
 import type { Horario } from "@/lib/horarios";
+import type { TipoCandidato } from "@/lib/anthropic";
 
 export type RegistroConferencia = {
   data: string;
@@ -53,7 +54,10 @@ export async function prepararConferenciaAction(
   const preparo = await prepararExportacao(candidatoId, data, horario);
   if (!preparo.ok) return preparo;
 
-  const porSentimento = montarMensagensPorSentimento(preparo.noticiasUnificadas);
+  const porSentimento = montarMensagensPorSentimento(
+    preparo.noticiasUnificadas,
+    preparo.candidato.tipo as TipoCandidato,
+  );
 
   const historico: RegistroConferencia[] = preparo.noticias.map((n) => ({
     data: formatarDataISO(n.dataPublicacao),

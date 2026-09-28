@@ -108,7 +108,12 @@ export function NoticiaRow({
             ) : (
               <Badge cor={corSentimento(noticia.sentimentoFinal)}>{noticia.sentimentoFinal}</Badge>
             )}
-            <Badge cor="var(--muted-foreground)">{noticia.secretaria}</Badge>
+            {/* Tema/secretaria só aparece pra prefeitura — pra candidatos ele
+                nunca vai pro corpo do resumo/mensagem (só existe pro
+                relatório de assuntos), então também não aparece aqui. */}
+            {rotuloClassificacao === "secretaria" && (
+              <Badge cor="var(--muted-foreground)">{noticia.secretaria}</Badge>
+            )}
             {noticia.revisadoManualmente && <Badge cor="var(--muted-foreground)">revisado manualmente</Badge>}
             {noticia.revisadoPelaIa && <Badge cor="var(--muted-foreground)">⚠️ corrigido pela IA</Badge>}
           </div>

@@ -26,9 +26,16 @@ function filtrarPorBusca(noticias: Noticia[], termo: string): Noticia[] {
  * Núcleo compartilhado entre exportarPorHorarioAction (horários fixos),
  * exportarAvulsoAction (disparo avulso — período/tipo arbitrário + busca
  * livre, porta de disparo_avulso.py/executar.py) e prepararConferenciaAction:
- * busca as notícias do recorte, unifica duplicatas e gera o relatório de
- * temas abordados. Um só lugar pra essa sequência evita duplicar a lógica
- * (e o custo de IA).
+ * busca as notícias do recorte e, só pra candidatos (pessoa), unifica
+ * duplicatas e gera o relatório de temas abordados.
+ *
+ * Unificação (unificador.ts, porta de unificador.py) e relatório de
+ * assuntos (temasAbordados.ts, porta de assuntos.py+relatorio.py) são
+ * EXCLUSIVOS de candidatos — nunca existiram no fluxo original da PMJP
+ * (nem a mensagem "RESUMO DO ALERTAS" faz parte do disparo dela, nem ela
+ * une notícias de veículos diferentes sobre o mesmo fato) e continuam sem
+ * existir pra ela: instituição usa a lista de notícias exatamente como
+ * veio do banco, sem esse passo a mais.
  */
 export async function prepararExportacaoPeriodo(
   candidatoId: string,
@@ -39,6 +46,7 @@ export async function prepararExportacaoPeriodo(
   busca?: string,
 ): Promise<PreparoExportacao> {
   const candidato = await prisma.candidato.findUniqueOrThrow({ where: { id: candidatoId } });
+  const tipo = candidato.tipo as "pessoa" | "instituicao";
 
   let noticias = await prisma.noticia.findMany({
     where: {
@@ -62,6 +70,10 @@ export async function prepararExportacaoPeriodo(
       ok: false,
       message: `Ainda há ${naoProcessadas.length} notícia(s) não processada(s) nesse recorte — processe em "Revisar" antes de exportar.`,
     };
+  }
+
+  if (tipo !== "pessoa") {
+    return { ok: true, candidato, noticias, noticiasUnificadas: noticias, relatorio: null };
   }
 
   const noticiasUnificadas = await unificarNoticias(noticias, candidato.nome);

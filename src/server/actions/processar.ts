@@ -8,7 +8,8 @@ import { verificarResumo } from "@/lib/verificacao";
 import { validarSentimento } from "@/lib/sentimento";
 import { validarSecretaria } from "@/lib/secretaria";
 import { validarTema } from "@/lib/tema";
-import { listarIdsPendentes } from "@/server/queries/noticias";
+import { listarPendentesPorHorario, type PendenteVM } from "@/server/queries/noticias";
+import type { Horario } from "@/lib/horarios";
 
 /**
  * Processa UMA notícia por vez (não em lote) — funções serverless do plano
@@ -56,7 +57,7 @@ export async function processarItemAction(id: string): Promise<{ ok: boolean; me
   let revisadoPelaIa = false;
 
   if (!ehOnline && relevante) {
-    const verificacao = await verificarResumo(noticia.transcricao ?? "", resumo, personagem);
+    const verificacao = await verificarResumo(noticia.transcricao ?? "", resumo, personagem, tipo);
     if (!verificacao.correto) {
       resumoOriginal = resumo;
       problemaDetectado = verificacao.problema ?? "";
@@ -112,10 +113,17 @@ export async function processarItemAction(id: string): Promise<{ ok: boolean; me
   return { ok: true };
 }
 
-/** Ids pendentes de um candidato numa data — usado pelo processamento em
- * lote (tela /candidatos) pra montar a lista antes de rodar processarItemAction
- * um a um, por candidato selecionado. */
-export async function listarIdsPendentesAction(candidatoId: string, dataExecucao: string): Promise<string[]> {
+/** Pendentes de um candidato dentro da janela de um horário específico —
+ * usado pelo processamento em lote (modal em /candidatos) pra montar a
+ * lista (com veículo/tipo, pra mostrar progresso item a item) antes de
+ * rodar processarItemAction um a um, por candidato selecionado. Deriva o
+ * tipo do próprio candidato — nunca confia no tipo vindo do cliente. */
+export async function listarPendentesPorHorarioAction(
+  candidatoId: string,
+  data: string,
+  horario: Horario,
+): Promise<PendenteVM[]> {
   await requireUserId();
-  return listarIdsPendentes(candidatoId, dataExecucao);
+  const candidato = await prisma.candidato.findUniqueOrThrow({ where: { id: candidatoId } });
+  return listarPendentesPorHorario(candidatoId, data, horario, candidato.tipo as "pessoa" | "instituicao");
 }

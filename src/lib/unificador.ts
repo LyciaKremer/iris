@@ -24,6 +24,9 @@ export type NoticiaUnificavel = {
   secretaria: string | null;
   resumo: string | null;
   relevante: boolean | null;
+  // Só preenchido (e só relevante) pra Online — usado pelo formato "pessoa"
+  // do formatador.ts (link direto da matéria, como em alertas-wpp).
+  linkDireto?: string | null;
 };
 
 function bucketKey(n: NoticiaUnificavel): string {

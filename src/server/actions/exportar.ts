@@ -6,6 +6,7 @@ import { montarMensagens } from "@/lib/formatador";
 import { montarExportVendor } from "@/lib/vendorExport";
 import { prepararExportacao, prepararExportacaoPeriodo } from "@/lib/prepararExportacao";
 import type { Horario } from "@/lib/horarios";
+import type { TipoCandidato } from "@/lib/anthropic";
 
 /**
  * Gera a lista de mensagens no formato final de envio — o mesmo formato
@@ -27,7 +28,7 @@ export async function exportarPorHorarioAction(
   const preparo = await prepararExportacao(candidatoId, data, horario);
   if (!preparo.ok) return preparo;
 
-  const mensagens = montarMensagens(preparo.noticiasUnificadas);
+  const mensagens = montarMensagens(preparo.noticiasUnificadas, preparo.candidato.tipo as TipoCandidato);
   if (preparo.relatorio) mensagens.push(preparo.relatorio);
 
   return { ok: true, mensagens };
@@ -62,7 +63,7 @@ export async function exportarAvulsoAction(
   const preparo = await prepararExportacaoPeriodo(candidatoId, inicio, fim, tipos, "avulso", busca);
   if (!preparo.ok) return preparo;
 
-  const mensagens = montarMensagens(preparo.noticiasUnificadas);
+  const mensagens = montarMensagens(preparo.noticiasUnificadas, preparo.candidato.tipo as TipoCandidato);
   if (preparo.relatorio) mensagens.push(preparo.relatorio);
 
   return { ok: true, mensagens };

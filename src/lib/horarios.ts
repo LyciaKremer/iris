@@ -41,6 +41,17 @@ export function horariosPorTipo(tipoCandidato: "pessoa" | "instituicao"): readon
   return tipoCandidato === "instituicao" ? HORARIOS_INSTITUICAO : HORARIOS_PESSOA;
 }
 
+/** União dos rótulos das duas grades, em ordem cronológica de cobertura —
+ * usado pelo processamento em lote (vários candidatos, possivelmente de
+ * tipos diferentes, numa tela só). "14h" existe nas duas grades (com
+ * janelas diferentes, resolvidas por calcularPeriodo a partir do tipo de
+ * cada candidato), então aparece uma única vez aqui. */
+export const TODOS_HORARIOS: readonly Horario[] = ["08h", "09h30", "9h", "14h", "14h30", "17h", "18h"];
+
+export function horarioValidoPara(horario: Horario, tipoCandidato: "pessoa" | "instituicao"): boolean {
+  return (horariosPorTipo(tipoCandidato) as readonly string[]).includes(horario);
+}
+
 const OFFSET_BRASILIA_HORAS = 3;
 
 function instanteBrasilia(ano: number, mes: number, dia: number, hora: number, minuto: number, segundo: number): Date {

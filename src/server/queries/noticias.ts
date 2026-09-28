@@ -1,5 +1,6 @@
 import "server-only";
 import { prisma } from "@/lib/prisma";
+import { calcularPeriodo, TIPO_POR_HORARIO_PESSOA, type Horario, type HorarioPessoa } from "@/lib/horarios";
 
 export async function listarDatasExecucao(candidatoId: string): Promise<string[]> {
   const linhas = await prisma.noticia.findMany({
@@ -22,15 +23,41 @@ export async function contarPendentes(candidatoId: string, dataExecucao: string)
   return prisma.noticia.count({ where: { candidatoId, dataExecucao, resumo: null } });
 }
 
-/** Ids pendentes de UM candidato numa data — usado pelo processamento em
- * lote (vários candidatos de uma vez), que roda isso por candidato
- * selecionado antes de processar item a item. */
-export async function listarIdsPendentes(candidatoId: string, dataExecucao: string): Promise<string[]> {
+export type PendenteVM = { id: string; veiculo: string; tipoVeiculo: string };
+
+/**
+ * Pendentes de UM candidato dentro da janela de um horário específico —
+ * usada pelo processamento em lote (`/candidatos`). Filtra por
+ * `dataPublicacao` (a mesma semântica de calcularPeriodo/exportar.ts, "a
+ * data de publicação real", não a data de importação) e pelo tipo de
+ * veículo daquele horário — assim o lote sabe exatamente qual recorte
+ * está processando, igual a "Revisar"/"Exportar" já sabem por candidato.
+ */
+export async function listarPendentesPorHorario(
+  candidatoId: string,
+  data: string,
+  horario: Horario,
+  tipoCandidato: "pessoa" | "instituicao",
+): Promise<PendenteVM[]> {
+  const { inicio, fim } = calcularPeriodo(data, horario, tipoCandidato);
+  // Mesmo filtro de tipo de veículo que a exportação usa pra esse horário
+  // (prepararExportacao.ts) — "processar o 9h" e "exportar o 9h" precisam
+  // significar o mesmo recorte de notícias.
+  const tiposPermitidos =
+    tipoCandidato === "instituicao" ? ["Rádio", "Televisão"] : [TIPO_POR_HORARIO_PESSOA[horario as HorarioPessoa]];
+
   const noticias = await prisma.noticia.findMany({
-    where: { candidatoId, dataExecucao, resumo: null },
-    select: { id: true },
+    where: {
+      candidatoId,
+      tipoVeiculo: { in: tiposPermitidos },
+      dataPublicacao: { gte: inicio, lte: fim },
+      resumo: null,
+    },
+    select: { id: true, veiculo: true, tipoVeiculo: true },
+    orderBy: { dataPublicacao: "desc" },
   });
-  return noticias.map((n) => n.id);
+
+  return noticias;
 }
 
 export type ResumoDia = { dataExecucao: string; total: number; pendentes: number };
