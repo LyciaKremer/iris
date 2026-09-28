@@ -2,10 +2,16 @@
 
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
-import { gerarRelatorioIndividualAction, gerarRelatorioComparativoAction } from "@/server/actions/relatorioGeral";
+import {
+  gerarRelatorioIndividualAction,
+  gerarRelatorioComparativoAction,
+  gerarGraficosAction,
+} from "@/server/actions/relatorioGeral";
 import { RainbowLoader } from "@/components/rainbow-loader";
+import type { SecaoGrafico } from "@/lib/relatorioGraficosSvg";
 
 type CandidatoOpcao = { id: string; nome: string };
+type GraficosOk = { comparativo: SecaoGrafico[]; porCandidato: { nome: string; secoes: SecaoGrafico[] }[] };
 
 export function RelatorioGeralPanel({ candidatos }: { candidatos: CandidatoOpcao[] }) {
   const [selecionados, setSelecionados] = useState<Set<string>>(new Set());
@@ -13,6 +19,8 @@ export function RelatorioGeralPanel({ candidatos }: { candidatos: CandidatoOpcao
   const [inicio, setInicio] = useState("");
   const [fim, setFim] = useState("");
   const [pending, startTransition] = useTransition();
+  const [pendingGraficos, startTransitionGraficos] = useTransition();
+  const [graficos, setGraficos] = useState<GraficosOk | null>(null);
 
   function alternar(id: string) {
     setSelecionados((atual) => {
@@ -21,6 +29,14 @@ export function RelatorioGeralPanel({ candidatos }: { candidatos: CandidatoOpcao
       else novo.add(id);
       return novo;
     });
+  }
+
+  function periodoAtual() {
+    const usaExato = Boolean(inicio && fim);
+    return {
+      inicioIso: usaExato ? new Date(inicio).toISOString() : undefined,
+      fimIso: usaExato ? new Date(fim).toISOString() : undefined,
+    };
   }
 
   async function baixar(resultado: { ok: boolean; arquivoBase64?: string; filename?: string; message?: string }) {
@@ -47,17 +63,30 @@ export function RelatorioGeralPanel({ candidatos }: { candidatos: CandidatoOpcao
         toast.error("Selecione ao menos um candidato.");
         return;
       }
-
-      const usaExato = Boolean(inicio && fim);
-      const inicioIso = usaExato ? new Date(inicio).toISOString() : undefined;
-      const fimIso = usaExato ? new Date(fim).toISOString() : undefined;
-
+      const { inicioIso, fimIso } = periodoAtual();
       const resultado =
         ids.length === 1
           ? await gerarRelatorioIndividualAction(ids[0], dias, inicioIso, fimIso)
           : await gerarRelatorioComparativoAction(ids, dias, inicioIso, fimIso);
-
       await baixar(resultado);
+    });
+  }
+
+  function verGraficos() {
+    setGraficos(null);
+    startTransitionGraficos(async () => {
+      const ids = [...selecionados];
+      if (ids.length === 0) {
+        toast.error("Selecione ao menos um candidato.");
+        return;
+      }
+      const { inicioIso, fimIso } = periodoAtual();
+      const resultado = await gerarGraficosAction(ids, dias, inicioIso, fimIso);
+      if (!resultado.ok) {
+        toast.error(resultado.message);
+        return;
+      }
+      setGraficos(resultado);
     });
   }
 
@@ -108,16 +137,55 @@ export function RelatorioGeralPanel({ candidatos }: { candidatos: CandidatoOpcao
         muda dependendo de que dia você gerar o relatório.
       </p>
 
-      <button
-        onClick={gerar}
-        disabled={pending || selecionados.size === 0}
-        className="flex items-center gap-2 rounded-md bg-[var(--primary)] px-4 py-2 text-sm font-medium text-[var(--primary-foreground)] disabled:opacity-60"
-      >
-        {pending && <RainbowLoader size={14} />}
-        {pending
-          ? "Gerando…"
-          : `Gerar relatório${selecionados.size > 1 ? " comparativo" : ""} (.docx)`}
-      </button>
+      <div className="flex flex-wrap gap-2">
+        <button
+          onClick={gerar}
+          disabled={pending || selecionados.size === 0}
+          className="flex items-center gap-2 rounded-md bg-[var(--primary)] px-4 py-2 text-sm font-medium text-[var(--primary-foreground)] disabled:opacity-60"
+        >
+          {pending && <RainbowLoader size={14} />}
+          {pending ? "Gerando…" : `Gerar relatório${selecionados.size > 1 ? " comparativo" : ""} (.docx)`}
+        </button>
+        <button
+          onClick={verGraficos}
+          disabled={pendingGraficos || selecionados.size === 0}
+          className="flex items-center gap-2 rounded-md border border-[var(--border)] px-4 py-2 text-sm font-medium disabled:opacity-60"
+        >
+          {pendingGraficos && <RainbowLoader size={14} />}
+          {pendingGraficos ? "Calculando…" : "Ver gráficos"}
+        </button>
+      </div>
+
+      {graficos && (
+        <div className="space-y-6 pt-2">
+          {graficos.comparativo.length > 0 && (
+            <div className="space-y-4">
+              <h2 className="text-sm font-semibold">Visão comparativa</h2>
+              {graficos.comparativo.map((secao) => (
+                <Grafico key={secao.titulo} secao={secao} />
+              ))}
+            </div>
+          )}
+
+          {graficos.porCandidato.map((c) => (
+            <div key={c.nome} className="space-y-4">
+              <h2 className="text-sm font-semibold">{c.nome}</h2>
+              {c.secoes.map((secao) => (
+                <Grafico key={secao.titulo} secao={secao} />
+              ))}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
+  );
+}
+
+function Grafico({ secao }: { secao: { titulo: string; svg: string } }) {
+  return (
+    <div
+      className="overflow-x-auto rounded-md border border-[var(--border)] p-2"
+      dangerouslySetInnerHTML={{ __html: secao.svg }}
+    />
   );
 }

@@ -4,15 +4,16 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  --background: oklch(0.99 0.005 280);
-  --foreground: oklch(0.22 0.02 280);
+  /* Paleta neutra (preto/branco/cinza) — sem matiz, minimalista. */
+  --background: oklch(0.98 0 0);
+  --foreground: oklch(0.17 0 0);
   --card: oklch(1 0 0);
-  --muted: oklch(0.96 0.008 280);
-  --muted-foreground: oklch(0.5 0.02 280);
-  --border: oklch(0.9 0.01 280);
+  --muted: oklch(0.96 0 0);
+  --muted-foreground: oklch(0.5 0 0);
+  --border: oklch(0.9 0 0);
 
-  --primary: oklch(0.55 0.16 300);
-  --primary-foreground: oklch(0.99 0.01 300);
+  --primary: oklch(0.17 0 0);
+  --primary-foreground: oklch(0.99 0 0);
 
   --positive: oklch(0.62 0.14 155);
   --negative: oklch(0.6 0.18 25);
@@ -20,15 +21,15 @@
 }
 
 .dark {
-  --background: oklch(0.2 0.02 280);
-  --foreground: oklch(0.94 0.01 270);
-  --card: oklch(0.25 0.02 280);
-  --muted: oklch(0.28 0.02 280);
-  --muted-foreground: oklch(0.68 0.02 270);
-  --border: oklch(0.34 0.02 280);
+  --background: oklch(0.16 0 0);
+  --foreground: oklch(0.95 0 0);
+  --card: oklch(0.21 0 0);
+  --muted: oklch(0.26 0 0);
+  --muted-foreground: oklch(0.68 0 0);
+  --border: oklch(0.32 0 0);
 
-  --primary: oklch(0.68 0.15 300);
-  --primary-foreground: oklch(0.15 0.02 300);
+  --primary: oklch(0.92 0 0);
+  --primary-foreground: oklch(0.15 0 0);
 
   --positive: oklch(0.68 0.14 155);
   --negative: oklch(0.68 0.18 25);
@@ -38,6 +39,11 @@
 body {
   background: var(--background);
   color: var(--foreground);
+}
+
+button:not(:disabled),
+[role="button"]:not(:disabled) {
+  cursor: pointer;
 }
 
 @keyframes iris-spin {
