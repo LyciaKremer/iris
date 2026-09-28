@@ -1,54 +1,81 @@
 import "server-only";
-import { Document, Packer, Paragraph, HeadingLevel, ImageRun, TextRun } from "docx";
 import {
-  svgBarrasHorizontais,
-  svgBarrasEmpilhadas,
-  svgBarrasDivergentes,
-  svgPizza,
-  svgLinha,
-  svgBarrasVerticais,
-  CORES_SENTIMENTO,
-} from "@/lib/svgCharts";
-import { svgParaPng } from "@/lib/rasterizarSvg";
+  Document,
+  Packer,
+  Paragraph,
+  HeadingLevel,
+  Table,
+  TableRow,
+  TableCell,
+  WidthType,
+  TextRun,
+} from "docx";
 import { formatarDataBR } from "@/lib/dates";
 import type { RegistroRelatorio } from "@/server/queries/relatorioGeral";
 import type { Pico } from "@/server/queries/picos";
 
 /**
- * Porta de relatorio_graficos.py — relatório .docx com gráficos (individual
- * por candidato e comparativo entre vários), diferente do "relatório
- * semanal" já existente (esse é PMJP-only, 5 métricas fixas em tabela, sem
- * gráfico). Gráficos são SVG rasterizado em PNG via sharp (ver svgCharts.ts
- * e rasterizarSvg.ts) — sem dependência de canvas nativo/matplotlib.
+ * Porta de relatorio_graficos.py — mesmos valores/métricas do relatório do
+ * alertas-wpp (individual por candidato e comparativo entre vários), só
+ * que em TABELAS por enquanto (sem gráfico) — mesmo estilo já usado no
+ * "relatório semanal" (relatorioDocx.ts), que é uma feature separada e
+ * continua intocada (PMJP-only, 5 métricas fixas).
  */
 
-const LARGURA_DOC = 480; // pt — cabe na largura útil da página A4/Letter com margem padrão
+type Nivel = (typeof HeadingLevel)[keyof typeof HeadingLevel];
 
-function extrairDimensoes(svg: string): { largura: number; altura: number } {
-  const m = svg.match(/width="(\d+)" height="(\d+)"/);
-  return { largura: Number(m?.[1] ?? 700), altura: Number(m?.[2] ?? 400) };
+function celula(texto: string): TableCell {
+  return new TableCell({ children: [new Paragraph(texto)] });
 }
 
-async function imagemDoSvg(svg: string): Promise<ImageRun> {
-  const { largura, altura } = extrairDimensoes(svg);
-  const buffer = await svgParaPng(svg);
-  const escala = LARGURA_DOC / largura;
-  return new ImageRun({
-    type: "png",
-    data: buffer,
-    transformation: { width: LARGURA_DOC, height: Math.round(altura * escala) },
-  });
-}
-
-function titulo(texto: string, nivel: (typeof HeadingLevel)[keyof typeof HeadingLevel]): Paragraph {
+function titulo(texto: string, nivel: Nivel): Paragraph {
   return new Paragraph({ text: texto, heading: nivel });
 }
 
-async function paragrafoComImagem(svg: string): Promise<Paragraph> {
-  return new Paragraph({ children: [await imagemDoSvg(svg)] });
+function tabelaRanking(itens: { nome: string; valor: number }[], colunaValor: string): Table | Paragraph {
+  if (itens.length === 0) return new Paragraph("Nenhum registro no período.");
+
+  return new Table({
+    width: { size: 100, type: WidthType.PERCENTAGE },
+    rows: [
+      new TableRow({ children: [celula("Nome"), celula(colunaValor)] }),
+      ...itens.map((item) => new TableRow({ children: [celula(item.nome), celula(String(item.valor))] })),
+    ],
+  });
 }
 
-function secaoPicos(picos: Pico[], nivel: (typeof HeadingLevel)[keyof typeof HeadingLevel]): Paragraph[] {
+function tabelaPorSentimento(
+  linhas: { nome: string; positivo: number; negativo: number; neutro: number }[],
+  colunaNome: string,
+): Table | Paragraph {
+  if (linhas.length === 0) return new Paragraph("Nenhum registro no período.");
+
+  return new Table({
+    width: { size: 100, type: WidthType.PERCENTAGE },
+    rows: [
+      new TableRow({
+        children: [celula(colunaNome), celula("Positivo"), celula("Negativo"), celula("Neutro")],
+      }),
+      ...linhas.map(
+        (l) =>
+          new TableRow({
+            children: [celula(l.nome), celula(String(l.positivo)), celula(String(l.negativo)), celula(String(l.neutro))],
+          }),
+      ),
+    ],
+  });
+}
+
+function contarPor<T>(itens: T[], chave: (item: T) => string): { nome: string; valor: number }[] {
+  const contagem = new Map<string, number>();
+  for (const item of itens) {
+    const k = chave(item);
+    contagem.set(k, (contagem.get(k) ?? 0) + 1);
+  }
+  return [...contagem.entries()].map(([nome, valor]) => ({ nome, valor })).sort((a, b) => b.valor - a.valor);
+}
+
+function secaoPicos(picos: Pico[], nivel: Nivel): Paragraph[] {
   const paragrafos: Paragraph[] = [titulo("Picos de volume", nivel)];
 
   if (picos.length === 0) {
@@ -80,48 +107,44 @@ function secaoPicos(picos: Pico[], nivel: (typeof HeadingLevel)[keyof typeof Hea
   return paragrafos;
 }
 
-/** Monta os parágrafos de gráficos + picos de UM candidato — reaproveitado
- * tanto no relatório individual quanto na seção "detalhamento" do
- * comparativo. */
-async function secaoCandidato(
+/** Monta as tabelas de UM candidato — reaproveitado tanto no relatório
+ * individual quanto na seção "detalhamento" do comparativo. */
+function secaoCandidato(
   registros: RegistroRelatorio[],
   picos: Pico[],
-  nivelTitulo: (typeof HeadingLevel)[keyof typeof HeadingLevel],
-  nivelSubtitulo: (typeof HeadingLevel)[keyof typeof HeadingLevel],
-): Promise<Paragraph[]> {
+  nivel: Nivel,
+): (Paragraph | Table)[] {
   const relevantes = registros.filter((r) => r.relevante);
-  const paragrafos: Paragraph[] = [];
+  const partes: (Paragraph | Table)[] = [];
+
+  const contarSentimento = (itens: RegistroRelatorio[], sentimento: string) =>
+    itens.filter((r) => r.sentimento === sentimento).length;
 
   // 1. Evolução do sentimento por dia
   const dias = [...new Set(relevantes.map((r) => r.data))].sort();
-  const porSentimento = (sentimento: string) =>
-    dias.map((d) => relevantes.filter((r) => r.data === d && r.sentimento === sentimento).length);
-  paragrafos.push(titulo("Evolução do sentimento", nivelSubtitulo));
-  paragrafos.push(
-    await paragrafoComImagem(
-      svgLinha(
-        dias,
-        Object.entries(CORES_SENTIMENTO).map(([sentimento, cor]) => ({
-          rotulo: sentimento,
-          valores: porSentimento(sentimento),
-          cor,
-        })),
-        "Evolução do sentimento por dia",
-      ),
+  partes.push(titulo("Evolução do sentimento por dia", nivel));
+  partes.push(
+    tabelaPorSentimento(
+      dias.map((d) => {
+        const doDia = relevantes.filter((r) => r.data === d);
+        return {
+          nome: formatarDataBR(d),
+          positivo: contarSentimento(doDia, "Positivo"),
+          negativo: contarSentimento(doDia, "Negativo"),
+          neutro: contarSentimento(doDia, "Neutro"),
+        };
+      }),
+      "Data",
     ),
   );
 
   // 2. Temas mais frequentes
-  const contagemTemas = contarPor(relevantes, (r) => r.tema);
-  paragrafos.push(titulo("Temas mais frequentes", nivelSubtitulo));
-  paragrafos.push(await paragrafoComImagem(svgBarrasHorizontais(contagemTemas, "Temas mais frequentes", "#455a64")));
+  partes.push(titulo("Temas mais frequentes", nivel));
+  partes.push(tabelaRanking(contarPor(relevantes, (r) => r.tema), "Notícias"));
 
   // 3. Veículos que mais cobriram (top 10)
-  const contagemVeiculos = contarPor(relevantes, (r) => r.veiculo).slice(0, 10);
-  paragrafos.push(titulo("Veículos que mais cobriram", nivelSubtitulo));
-  paragrafos.push(
-    await paragrafoComImagem(svgBarrasHorizontais(contagemVeiculos, "Veículos que mais cobriram (top 10)", "#6a1b9a")),
-  );
+  partes.push(titulo("Veículos que mais cobriram (top 10)", nivel));
+  partes.push(tabelaRanking(contarPor(relevantes, (r) => r.veiculo).slice(0, 10), "Notícias"));
 
   // 4. Cidades que mais cobriram (top 10) — só se houver mapeamento
   const contagemCidades = contarPor(
@@ -129,70 +152,54 @@ async function secaoCandidato(
     (r) => r.cidade,
   ).slice(0, 10);
   if (contagemCidades.length > 0) {
-    paragrafos.push(titulo("Cidades que mais cobriram", nivelSubtitulo));
-    paragrafos.push(
-      await paragrafoComImagem(
-        svgBarrasHorizontais(contagemCidades, "Cidades que mais cobriram (cidade-sede do veículo, top 10)", "#00695c"),
-      ),
-    );
+    partes.push(titulo("Cidades que mais cobriram (top 10)", nivel));
+    partes.push(tabelaRanking(contagemCidades, "Notícias"));
   }
 
-  // 5. Sentimento por veículo (top 8, empilhado)
+  // 5. Sentimento por veículo (top 8)
   const topVeiculos = contarPor(relevantes, (r) => r.veiculo)
     .slice(0, 8)
     .map((v) => v.nome);
   if (topVeiculos.length > 0) {
-    const linhasEmpilhadas = topVeiculos.map((veiculo) => ({
-      nome: veiculo,
-      partes: Object.entries(CORES_SENTIMENTO).map(([sentimento, cor]) => ({
-        rotulo: sentimento,
-        valor: relevantes.filter((r) => r.veiculo === veiculo && r.sentimento === sentimento).length,
-        cor,
-      })),
-    }));
-    paragrafos.push(titulo("Sentimento por veículo", nivelSubtitulo));
-    paragrafos.push(await paragrafoComImagem(svgBarrasEmpilhadas(linhasEmpilhadas, "Sentimento por veículo")));
-  }
-
-  // 6. Volume por tipo de veículo (pizza)
-  const coresTipo: Record<string, string> = { Rádio: "#455a64", Televisão: "#6a1b9a", Online: "#00695c" };
-  const contagemTipos = contarPor(registros, (r) => r.tipo);
-  paragrafos.push(titulo("Volume por tipo de veículo", nivelSubtitulo));
-  paragrafos.push(
-    await paragrafoComImagem(
-      svgPizza(
-        contagemTipos.map((t) => ({ nome: t.nome, valor: t.valor, cor: coresTipo[t.nome] ?? "#999" })),
-        "Volume por tipo de veículo",
+    partes.push(titulo("Sentimento por veículo", nivel));
+    partes.push(
+      tabelaPorSentimento(
+        topVeiculos.map((veiculo) => {
+          const doVeiculo = relevantes.filter((r) => r.veiculo === veiculo);
+          return {
+            nome: veiculo,
+            positivo: contarSentimento(doVeiculo, "Positivo"),
+            negativo: contarSentimento(doVeiculo, "Negativo"),
+            neutro: contarSentimento(doVeiculo, "Neutro"),
+          };
+        }),
+        "Veículo",
       ),
-    ),
-  );
-
-  // 7. Volume diário, com picos destacados
-  const datasPico = new Set(picos.map((p) => p.data));
-  const volumePorDia = dias.map((d) => ({
-    rotulo: d,
-    valor: relevantes.filter((r) => r.data === d).length,
-    destaque: datasPico.has(d),
-  }));
-  if (volumePorDia.length > 0) {
-    paragrafos.push(titulo("Volume diário", nivelSubtitulo));
-    paragrafos.push(
-      await paragrafoComImagem(svgBarrasVerticais(volumePorDia, "Volume diário de notícias (picos em vermelho)")),
     );
   }
 
-  paragrafos.push(...secaoPicos(picos, nivelSubtitulo));
+  // 6. Volume por tipo de veículo
+  partes.push(titulo("Volume por tipo de veículo", nivel));
+  partes.push(tabelaRanking(contarPor(registros, (r) => r.tipo), "Notícias"));
 
-  return paragrafos;
-}
-
-function contarPor<T>(itens: T[], chave: (item: T) => string): { nome: string; valor: number }[] {
-  const contagem = new Map<string, number>();
-  for (const item of itens) {
-    const k = chave(item);
-    contagem.set(k, (contagem.get(k) ?? 0) + 1);
+  // 7. Volume diário (dias de pico marcados)
+  const datasPico = new Set(picos.map((p) => p.data));
+  if (dias.length > 0) {
+    partes.push(titulo("Volume diário", nivel));
+    partes.push(
+      tabelaRanking(
+        dias.map((d) => ({
+          nome: formatarDataBR(d) + (datasPico.has(d) ? " ⚠ pico" : ""),
+          valor: relevantes.filter((r) => r.data === d).length,
+        })),
+        "Notícias",
+      ),
+    );
   }
-  return [...contagem.entries()].map(([nome, valor]) => ({ nome, valor })).sort((a, b) => b.valor - a.valor);
+
+  partes.push(...secaoPicos(picos, nivel));
+
+  return partes;
 }
 
 export type DadosCandidatoRelatorio = {
@@ -211,7 +218,7 @@ export async function gerarRelatorioGraficosDocx(
   const relevantes = registros.filter((r) => r.relevante);
   const taxa = registros.length ? Math.round((relevantes.length / registros.length) * 100) : 0;
 
-  const corpo = await secaoCandidato(registros, picos, HeadingLevel.HEADING_1, HeadingLevel.HEADING_1);
+  const corpo = secaoCandidato(registros, picos, HeadingLevel.HEADING_1);
 
   const doc = new Document({
     sections: [
@@ -234,7 +241,7 @@ export async function gerarRelatorioGraficosDocx(
 }
 
 /** Relatório comparativo entre vários candidatos, com uma seção de
- * detalhamento individual (gráficos + picos) por candidato ao final —
+ * detalhamento individual (tabelas + picos) por candidato ao final —
  * porta de gerar_relatorio_geral() em relatorio_graficos.py. */
 export async function gerarRelatorioGeralDocx(rotuloPeriodo: string, dados: DadosCandidatoRelatorio[]): Promise<Buffer> {
   const nomes = dados.map((d) => d.nome);
@@ -246,40 +253,31 @@ export async function gerarRelatorioGeralDocx(rotuloPeriodo: string, dados: Dado
   const percentuaisPorCandidato = dados.map((d) => {
     const relevantes = d.registros.filter((r) => r.relevante);
     const total = relevantes.length || 1;
-    const pct = (sentimento: string) =>
-      (relevantes.filter((r) => r.sentimento === sentimento).length / total) * 100;
+    const pct = (sentimento: string) => Math.round((relevantes.filter((r) => r.sentimento === sentimento).length / total) * 1000) / 10;
     return { nome: d.nome, positivo: pct("Positivo"), negativo: pct("Negativo"), neutro: pct("Neutro") };
   });
-
-  const linhasDistribuicao = percentuaisPorCandidato
-    .sort((a, b) => volumePorCandidato.findIndex((v) => v.nome === a.nome) - volumePorCandidato.findIndex((v) => v.nome === b.nome))
-    .map((p) => ({
-      nome: p.nome,
-      partes: [
-        { rotulo: "Negativo", valor: p.negativo, cor: CORES_SENTIMENTO.Negativo },
-        { rotulo: "Neutro", valor: p.neutro, cor: CORES_SENTIMENTO.Neutro },
-        { rotulo: "Positivo", valor: p.positivo, cor: CORES_SENTIMENTO.Positivo },
-      ],
-    }));
 
   const saldos = percentuaisPorCandidato
     .map((p) => ({ nome: p.nome, valor: Math.round((p.positivo - p.negativo) * 10) / 10 }))
     .sort((a, b) => b.valor - a.valor);
 
-  const comparativo: Paragraph[] = [
+  const comparativo: (Paragraph | Table)[] = [
     titulo("Visão comparativa", HeadingLevel.HEADING_1),
-    titulo("Volume de cobertura por candidato", HeadingLevel.HEADING_2),
-    await paragrafoComImagem(svgBarrasHorizontais(volumePorCandidato, "Volume de cobertura relevante por candidato", "#37474f")),
-    titulo("Distribuição de sentimento por candidato", HeadingLevel.HEADING_2),
-    await paragrafoComImagem(svgBarrasEmpilhadas(linhasDistribuicao, "Distribuição de sentimento por candidato (%)", true)),
-    titulo("Saldo de sentimento por candidato", HeadingLevel.HEADING_2),
-    await paragrafoComImagem(svgBarrasDivergentes(saldos, "Saldo de sentimento por candidato", "% positivo − % negativo")),
+    titulo("Volume de cobertura relevante por candidato", HeadingLevel.HEADING_2),
+    tabelaRanking(volumePorCandidato, "Notícias"),
+    titulo("Distribuição de sentimento por candidato (%)", HeadingLevel.HEADING_2),
+    tabelaPorSentimento(
+      percentuaisPorCandidato.map((p) => ({ nome: p.nome, positivo: p.positivo, negativo: p.negativo, neutro: p.neutro })),
+      "Candidato",
+    ),
+    titulo("Saldo de sentimento por candidato (% positivo − % negativo)", HeadingLevel.HEADING_2),
+    tabelaRanking(saldos, "Saldo"),
   ];
 
-  const detalhamentos: Paragraph[] = [];
+  const detalhamentos: (Paragraph | Table)[] = [];
   for (const d of dados) {
     detalhamentos.push(titulo(`Detalhamento — ${d.nome}`, HeadingLevel.HEADING_1));
-    detalhamentos.push(...(await secaoCandidato(d.registros, d.picos, HeadingLevel.HEADING_1, HeadingLevel.HEADING_2)));
+    detalhamentos.push(...secaoCandidato(d.registros, d.picos, HeadingLevel.HEADING_2));
   }
 
   const doc = new Document({

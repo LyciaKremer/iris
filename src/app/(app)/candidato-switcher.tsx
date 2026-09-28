@@ -27,7 +27,7 @@ export function CandidatoSwitcher({
     <select
       value={atual ?? ""}
       onChange={(e) => trocar(e.target.value)}
-      className="h-8 rounded-md border border-[var(--border)] bg-[var(--card)] px-2 text-sm"
+      className="h-9 w-full rounded-md border border-[var(--border)] bg-[var(--card)] px-2 text-sm"
     >
       {!atual && <option value="" disabled>Selecione um candidato</option>}
       {candidatos.map((c) => (
