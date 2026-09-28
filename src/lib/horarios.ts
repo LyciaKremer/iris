@@ -6,6 +6,9 @@
  * - 14h cobre o restante da manhã (08h–14h)
  * - 18h cobre a tarde (14h–18h)
  *
+ * Grade da PMJP (instituição) — sem filtro de tipo de veículo, todos os
+ * tipos monitorados (Rádio/TV) aparecem em qualquer horário.
+ *
  * Cálculo feito em UTC explícito (Date.UTC), NUNCA usando o fuso horário
  * do processo Node — em produção (Vercel) o servidor roda em UTC, não em
  * horário de Brasília, então usar new Date(...).setHours() daria as
@@ -14,8 +17,29 @@
  * instante UTC equivalente.
  */
 
-export const HORARIOS = ["08h", "09h30", "14h", "18h"] as const;
-export type Horario = (typeof HORARIOS)[number];
+export const HORARIOS_INSTITUICAO = ["08h", "09h30", "14h", "18h"] as const;
+export type HorarioInstituicao = (typeof HORARIOS_INSTITUICAO)[number];
+
+/**
+ * Grade dos candidatos (pessoa) — porta de alertas-wpp/horarios.py: cada
+ * horário amarra também um tipo de veículo fixo (CONFIG_HORARIOS), porque
+ * historicamente cada disparo daquele horário só levava um tipo.
+ */
+export const HORARIOS_PESSOA = ["9h", "14h", "14h30", "17h"] as const;
+export type HorarioPessoa = (typeof HORARIOS_PESSOA)[number];
+
+export const TIPO_POR_HORARIO_PESSOA: Record<HorarioPessoa, string> = {
+  "9h": "Rádio",
+  "14h": "Rádio",
+  "14h30": "Televisão",
+  "17h": "Online",
+};
+
+export type Horario = HorarioInstituicao | HorarioPessoa;
+
+export function horariosPorTipo(tipoCandidato: "pessoa" | "instituicao"): readonly Horario[] {
+  return tipoCandidato === "instituicao" ? HORARIOS_INSTITUICAO : HORARIOS_PESSOA;
+}
 
 const OFFSET_BRASILIA_HORAS = 3;
 
@@ -23,28 +47,73 @@ function instanteBrasilia(ano: number, mes: number, dia: number, hora: number, m
   return new Date(Date.UTC(ano, mes - 1, dia, hora + OFFSET_BRASILIA_HORAS, minuto, segundo));
 }
 
-/** `dataBase` é o dia do disparo, "YYYY-MM-DD" no calendário de Brasília. */
-export function calcularPeriodo(dataBase: string, horario: Horario): { inicio: Date; fim: Date } {
-  const [ano, mes, dia] = dataBase.split("-").map(Number);
-
+function diaAnterior(ano: number, mes: number, dia: number): { ano: number; mes: number; dia: number } {
   // Data do dia anterior calculada via UTC puro (Date.UTC normaliza
   // automaticamente virada de mês/ano quando dia-1 é 0).
   const anterior = new Date(Date.UTC(ano, mes - 1, dia - 1));
-  const anoAnt = anterior.getUTCFullYear();
-  const mesAnt = anterior.getUTCMonth() + 1;
-  const diaAnt = anterior.getUTCDate();
+  return { ano: anterior.getUTCFullYear(), mes: anterior.getUTCMonth() + 1, dia: anterior.getUTCDate() };
+}
 
+function calcularPeriodoInstituicao(ano: number, mes: number, dia: number, horario: HorarioInstituicao): { inicio: Date; fim: Date } {
   switch (horario) {
     case "08h":
       return { inicio: instanteBrasilia(ano, mes, dia, 0, 0, 0), fim: instanteBrasilia(ano, mes, dia, 8, 0, 0) };
-    case "09h30":
+    case "09h30": {
+      const ant = diaAnterior(ano, mes, dia);
       return {
-        inicio: instanteBrasilia(anoAnt, mesAnt, diaAnt, 17, 0, 0),
-        fim: instanteBrasilia(anoAnt, mesAnt, diaAnt, 23, 59, 59),
+        inicio: instanteBrasilia(ant.ano, ant.mes, ant.dia, 17, 0, 0),
+        fim: instanteBrasilia(ant.ano, ant.mes, ant.dia, 23, 59, 59),
       };
+    }
     case "14h":
       return { inicio: instanteBrasilia(ano, mes, dia, 8, 0, 0), fim: instanteBrasilia(ano, mes, dia, 14, 0, 0) };
     case "18h":
       return { inicio: instanteBrasilia(ano, mes, dia, 14, 0, 0), fim: instanteBrasilia(ano, mes, dia, 18, 0, 0) };
   }
+}
+
+// Grade pessoa (candidatos) — janelas portadas de alertas-wpp/horarios.py
+// (calcular_periodo), mesma semântica: "tarde/noite anterior" pro 9h, "dia
+// atual" pro 14h/17h, "noite anterior + dia atual" pro 14h30. O "até agora"
+// do script Python vira "até 23:59:59" aqui — a exportação é sob demanda,
+// não há notícia com data futura à data de publicação real de qualquer forma.
+function calcularPeriodoPessoa(ano: number, mes: number, dia: number, horario: HorarioPessoa): { inicio: Date; fim: Date } {
+  switch (horario) {
+    case "9h": {
+      const ant = diaAnterior(ano, mes, dia);
+      return {
+        inicio: instanteBrasilia(ant.ano, ant.mes, ant.dia, 12, 0, 0),
+        fim: instanteBrasilia(ant.ano, ant.mes, ant.dia, 23, 59, 59),
+      };
+    }
+    case "14h":
+      return { inicio: instanteBrasilia(ano, mes, dia, 0, 0, 0), fim: instanteBrasilia(ano, mes, dia, 23, 59, 59) };
+    case "14h30": {
+      const ant = diaAnterior(ano, mes, dia);
+      return {
+        inicio: instanteBrasilia(ant.ano, ant.mes, ant.dia, 17, 0, 0),
+        fim: instanteBrasilia(ano, mes, dia, 23, 59, 59),
+      };
+    }
+    case "17h":
+      return { inicio: instanteBrasilia(ano, mes, dia, 0, 0, 0), fim: instanteBrasilia(ano, mes, dia, 23, 59, 59) };
+  }
+}
+
+/**
+ * `dataBase` é o dia do disparo, "YYYY-MM-DD" no calendário de Brasília.
+ * `tipoCandidato` é OBRIGATÓRIO pra desambiguar — "14h" existe nas duas
+ * grades com janelas diferentes (instituição: 08h-14h; pessoa: dia
+ * inteiro), então o rótulo do horário sozinho não basta.
+ */
+export function calcularPeriodo(
+  dataBase: string,
+  horario: Horario,
+  tipoCandidato: "pessoa" | "instituicao",
+): { inicio: Date; fim: Date } {
+  const [ano, mes, dia] = dataBase.split("-").map(Number);
+
+  return tipoCandidato === "instituicao"
+    ? calcularPeriodoInstituicao(ano, mes, dia, horario as HorarioInstituicao)
+    : calcularPeriodoPessoa(ano, mes, dia, horario as HorarioPessoa);
 }

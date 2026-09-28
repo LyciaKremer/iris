@@ -7,17 +7,20 @@ import { gerarRelatorioPdf } from "@/lib/relatorioPdf";
 import type { RelatorioSemanal } from "@/lib/relatorioSemanal";
 
 export async function calcularRelatorioAction(
+  candidatoId: string,
   inicio: string,
   fim: string,
 ): Promise<{ ok: true; relatorio: RelatorioSemanal } | { ok: false; message: string }> {
   await requireUserId();
   if (!inicio || !fim) return { ok: false, message: "Período inválido." };
 
-  const relatorio = await calcularRelatorioSemanal(inicio, fim);
+  const relatorio = await calcularRelatorioSemanal(candidatoId, inicio, fim);
   return { ok: true, relatorio };
 }
 
 export async function baixarRelatorioAction(
+  candidatoId: string,
+  candidatoSlug: string,
   inicio: string,
   fim: string,
   formato: "docx" | "pdf",
@@ -28,7 +31,7 @@ export async function baixarRelatorioAction(
   await requireUserId();
   if (!inicio || !fim) return { ok: false, message: "Período inválido." };
 
-  const relatorio = await calcularRelatorioSemanal(inicio, fim);
+  const relatorio = await calcularRelatorioSemanal(candidatoId, inicio, fim);
 
   const buffer =
     formato === "docx" ? await gerarRelatorioDocx(relatorio) : await gerarRelatorioPdf(relatorio);
@@ -41,7 +44,7 @@ export async function baixarRelatorioAction(
   return {
     ok: true,
     arquivoBase64: buffer.toString("base64"),
-    filename: `relatorio_pmjp_${inicio}_a_${fim}.${formato}`,
+    filename: `relatorio_${candidatoSlug}_${inicio}_a_${fim}.${formato}`,
     mimeType,
   };
 }

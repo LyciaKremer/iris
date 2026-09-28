@@ -17,7 +17,10 @@ export async function salvarRevisaoAction(_prev: ActionState, formData: FormData
 
   if (!id) return { ok: false, message: "Notícia não identificada." };
 
-  const noticia = await prisma.noticia.findUnique({ where: { id }, select: { id: true } });
+  const noticia = await prisma.noticia.findUnique({
+    where: { id },
+    select: { id: true, candidato: { select: { slug: true } } },
+  });
   if (!noticia) return { ok: false, message: "Notícia não encontrada." };
 
   await prisma.noticia.update({
@@ -25,6 +28,6 @@ export async function salvarRevisaoAction(_prev: ActionState, formData: FormData
     data: { resumo, sentimentoFinal, secretaria, revisadoManualmente: true },
   });
 
-  revalidatePath("/revisar");
+  revalidatePath(`/${noticia.candidato.slug}/revisar`);
   return { ok: true, message: "Revisão salva." };
 }

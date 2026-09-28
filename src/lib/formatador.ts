@@ -29,8 +29,10 @@ export type NoticiaParaEnvio = {
   relevante: boolean | null;
 };
 
-export function montarMensagens(noticias: NoticiaParaEnvio[]): string[] {
-  const grupos: Record<string, Record<string, NoticiaParaEnvio[]>> = {};
+type Grupos = Record<string, Record<string, NoticiaParaEnvio[]>>;
+
+function agrupar(noticias: NoticiaParaEnvio[]): Grupos {
+  const grupos: Grupos = {};
 
   for (const noticia of noticias) {
     const tipo = noticia.tipoVeiculo;
@@ -44,6 +46,32 @@ export function montarMensagens(noticias: NoticiaParaEnvio[]): string[] {
     grupos[tipo][sentimento].push(noticia);
   }
 
+  return grupos;
+}
+
+/** Uma mensagem por notícia (negativas nunca são agrupadas) ou uma
+ * mensagem só juntando todas as notícias do bucket (neutro/positivo). */
+function montarMensagensDoBucket(sentimento: string, itens: NoticiaParaEnvio[]): string[] {
+  const emoji = EMOJI_SENTIMENTO[sentimento] ?? "⚪";
+
+  if (sentimento === "Negativo") {
+    return itens.map((n) => {
+      const secretaria = n.secretaria ?? "Outro";
+      const resumo = n.resumo || "Sem clipping.";
+      return `${emoji} ${n.veiculo} - ${secretaria} - ${resumo}`;
+    });
+  }
+
+  const linhas = itens.map((n) => {
+    const secretaria = n.secretaria ?? "Outro";
+    const resumo = n.resumo || "Sem clipping.";
+    return `${emoji} ${n.veiculo}: ${secretaria} - ${resumo}`;
+  });
+  return [linhas.join("\n\n")];
+}
+
+export function montarMensagens(noticias: NoticiaParaEnvio[]): string[] {
+  const grupos = agrupar(noticias);
   const mensagens: string[] = [];
 
   for (const tipo of ORDEM_TIPOS) {
@@ -52,26 +80,32 @@ export function montarMensagens(noticias: NoticiaParaEnvio[]): string[] {
     for (const sentimento of ORDEM_SENTIMENTOS) {
       const itens = grupos[tipo][sentimento];
       if (!itens) continue;
-
-      const emoji = EMOJI_SENTIMENTO[sentimento] ?? "⚪";
-
-      if (sentimento === "Negativo") {
-        for (const n of itens) {
-          const secretaria = n.secretaria ?? "Outro";
-          const resumo = n.resumo || "Sem clipping.";
-          mensagens.push(`${emoji} ${n.veiculo} - ${secretaria} - ${resumo}`);
-        }
-        continue;
-      }
-
-      const linhas = itens.map((n) => {
-        const secretaria = n.secretaria ?? "Outro";
-        const resumo = n.resumo || "Sem clipping.";
-        return `${emoji} ${n.veiculo}: ${secretaria} - ${resumo}`;
-      });
-      mensagens.push(linhas.join("\n\n"));
+      mensagens.push(...montarMensagensDoBucket(sentimento, itens));
     }
   }
 
   return mensagens;
+}
+
+/**
+ * Mesmo agrupamento de montarMensagens(), mas devolve um dict
+ * {sentimento: [mensagens...]} juntando todos os tipos de veículo — usado
+ * pela conferência (negativos.txt/neutros.txt/positivos.txt), que é por
+ * disparo inteiro, não por tipo de veículo.
+ */
+export function montarMensagensPorSentimento(noticias: NoticiaParaEnvio[]): Record<string, string[]> {
+  const grupos = agrupar(noticias);
+  const resultado: Record<string, string[]> = { Negativo: [], Neutro: [], Positivo: [] };
+
+  for (const tipo of ORDEM_TIPOS) {
+    if (!grupos[tipo]) continue;
+
+    for (const sentimento of ORDEM_SENTIMENTOS) {
+      const itens = grupos[tipo][sentimento];
+      if (!itens) continue;
+      resultado[sentimento].push(...montarMensagensDoBucket(sentimento, itens));
+    }
+  }
+
+  return resultado;
 }

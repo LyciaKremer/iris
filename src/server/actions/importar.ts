@@ -19,12 +19,16 @@ export async function importarAction(_prev: ActionState, formData: FormData): Pr
 
   const jsonTexto = String(formData.get("jsonTexto") ?? "").trim();
   const dataExecucao = String(formData.get("dataExecucao") ?? "");
+  const candidatoId = String(formData.get("candidatoId") ?? "");
 
   if (!jsonTexto) {
     return { ok: false, message: "Cole o JSON exportado da plataforma de clipping." };
   }
   if (!dataExecucao) {
     return { ok: false, message: "Informe a data do disparo." };
+  }
+  if (!candidatoId) {
+    return { ok: false, message: "Candidato não identificado." };
   }
 
   let json: unknown;
@@ -45,7 +49,7 @@ export async function importarAction(_prev: ActionState, formData: FormData): Pr
   }
 
   const existentes = await prisma.noticia.findMany({
-    where: { dataExecucao, noticiaId: { in: itens.map((i) => i.noticiaId) } },
+    where: { candidatoId, dataExecucao, noticiaId: { in: itens.map((i) => i.noticiaId) } },
     select: { noticiaId: true },
   });
   const jaExistem = new Set(existentes.map((e) => e.noticiaId));
@@ -54,6 +58,7 @@ export async function importarAction(_prev: ActionState, formData: FormData): Pr
   if (novos.length > 0) {
     await prisma.noticia.createMany({
       data: novos.map((i) => ({
+        candidatoId,
         noticiaId: i.noticiaId,
         dataExecucao,
         veiculo: i.veiculo,
@@ -68,9 +73,11 @@ export async function importarAction(_prev: ActionState, formData: FormData): Pr
     });
   }
 
-  const totalNaData = await prisma.noticia.count({ where: { dataExecucao } });
+  const totalNaData = await prisma.noticia.count({ where: { candidatoId, dataExecucao } });
 
-  revalidatePath("/revisar");
+  const candidatoSlug = String(formData.get("candidatoSlug") ?? "");
+  if (candidatoSlug) revalidatePath(`/${candidatoSlug}/revisar`);
+
   return {
     ok: true,
     message: `+${novos.length} nova(s) (${itens.length - novos.length} já existiam nessa página) — ${totalNaData} no total em ${dataExecucao}.`,

@@ -1,10 +1,11 @@
 import "server-only";
 import { askClaude } from "@/lib/anthropic";
+import type { TipoCandidato } from "@/lib/anthropic";
 
 const SENTIMENTOS_VALIDOS = new Set(["positivo", "negativo", "neutro"]);
 
-async function classificarSentimento(texto: string, personagem: string): Promise<string> {
-  const prompt = `Você é um analista de clipping. Sua tarefa é classificar o tom da cobertura EM RELAÇÃO A ${personagem}, usando apenas o texto abaixo.
+function promptSentimentoInstituicao(texto: string, personagem: string): string {
+  return `Você é um analista de clipping. Sua tarefa é classificar o tom da cobertura EM RELAÇÃO A ${personagem}, usando apenas o texto abaixo.
 
 Classifique o sentimento da cobertura em relação a ${personagem} como exatamente uma destas três opções:
 - Positivo
@@ -22,6 +23,38 @@ Texto:
 ${texto}
 
 Sentimento:`;
+}
+
+/** Porta fiel de classificar_sentimento() (alertas-wpp/sentimento.py) — escopo
+ * de pessoa política (apoio/crítica/escândalo), não de gestão institucional. */
+function promptSentimentoPessoa(texto: string, personagem: string): string {
+  return `Você é um analista de clipping político. Sua tarefa é classificar o tom da cobertura EM RELAÇÃO A um personagem específico, usando apenas o texto abaixo.
+
+Personagem: ${personagem}
+
+Classifique o sentimento da cobertura em relação a ${personagem} como exatamente uma destas três opções:
+- Positivo
+- Negativo
+- Neutro
+
+REGRAS:
+- Considere apenas o que é dito especificamente sobre ${personagem}, não o tom geral do texto sobre outros assuntos ou pessoas.
+- Neutro: menção informativa, sem elogio nem crítica clara.
+- Positivo: elogio, conquista, apoio, repercussão favorável a ${personagem}.
+- Negativo: crítica, escândalo, acusação, repercussão desfavorável a ${personagem}.
+- Responda APENAS com uma palavra: Positivo, Negativo ou Neutro. Nada mais, sem pontuação.
+
+Texto:
+${texto}
+
+Sentimento:`;
+}
+
+async function classificarSentimento(texto: string, personagem: string, tipo: TipoCandidato): Promise<string> {
+  const prompt =
+    tipo === "instituicao"
+      ? promptSentimentoInstituicao(texto, personagem)
+      : promptSentimentoPessoa(texto, personagem);
 
   return (await askClaude(prompt, 10)).trim();
 }
@@ -34,12 +67,13 @@ export async function validarSentimento(
   texto: string,
   sentimentoAtual: string,
   personagem: string,
+  tipo: TipoCandidato,
 ): Promise<string> {
   if (!texto) return sentimentoAtual;
 
   let resposta: string;
   try {
-    resposta = await classificarSentimento(texto, personagem);
+    resposta = await classificarSentimento(texto, personagem, tipo);
   } catch (erro) {
     console.error(`[ERRO] Falha ao validar sentimento: ${erro}`);
     resposta = sentimentoAtual;

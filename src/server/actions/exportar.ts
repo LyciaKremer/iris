@@ -4,8 +4,8 @@ import { requireUserId } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
 import { montarMensagens } from "@/lib/formatador";
 import { montarExportVendor } from "@/lib/vendorExport";
-import { PERSONAGEM } from "@/lib/config";
-import { calcularPeriodo, type Horario } from "@/lib/horarios";
+import { prepararExportacao, prepararExportacaoPeriodo } from "@/lib/prepararExportacao";
+import type { Horario } from "@/lib/horarios";
 
 /**
  * Gera a lista de mensagens no formato final de envio — o mesmo formato
@@ -13,42 +13,58 @@ import { calcularPeriodo, type Horario } from "@/lib/horarios";
  * (disparar_mensagens.py) só lê esse JSON exportado e dispara; nenhuma
  * lógica de negócio mora mais lá.
  *
- * Filtra por PERÍODO DE PUBLICAÇÃO (não por dataExecucao) — os 4 envios
- * diários da PMJP (08h/09h30/14h/18h) são recortes de horário sobre a
- * base inteira, igual ao pipeline local original (clipping.py filtrava
- * por `Data de publicação`, não por qual dia a notícia foi importada).
- * Só Rádio/TV entram — a PMJP não recebe cobertura Online.
+ * A busca/unificação/relatório de temas fica em prepararExportacao() —
+ * compartilhado com prepararConferenciaAction, já que os dois partem do
+ * mesmo recorte de notícias do período.
  */
 export async function exportarPorHorarioAction(
+  candidatoId: string,
   data: string,
   horario: Horario,
 ): Promise<{ ok: boolean; mensagens?: string[]; message?: string }> {
   await requireUserId();
 
-  if (!data) return { ok: false, message: "Informe a data." };
+  const preparo = await prepararExportacao(candidatoId, data, horario);
+  if (!preparo.ok) return preparo;
 
-  const { inicio, fim } = calcularPeriodo(data, horario);
+  const mensagens = montarMensagens(preparo.noticiasUnificadas);
+  if (preparo.relatorio) mensagens.push(preparo.relatorio);
 
-  const noticias = await prisma.noticia.findMany({
-    where: {
-      tipoVeiculo: { in: ["Rádio", "Televisão"] },
-      dataPublicacao: { gte: inicio, lte: fim },
-    },
-  });
+  return { ok: true, mensagens };
+}
 
-  if (noticias.length === 0) {
-    return { ok: false, message: "Nenhuma notícia encontrada nesse período." };
+/**
+ * Disparo avulso — porta de disparo_avulso.py: período/tipo arbitrário
+ * (fora dos horários fixos) + filtro de busca livre opcional. `inicio`/
+ * `fim` são datetimes completos (não só a data), e `tipos` é a lista de
+ * tipos de veículo escolhida manualmente na tela, sem depender da grade
+ * de horário do candidato.
+ */
+export async function exportarAvulsoAction(
+  candidatoId: string,
+  inicioIso: string,
+  fimIso: string,
+  tipos: string[],
+  busca?: string,
+): Promise<{ ok: boolean; mensagens?: string[]; message?: string }> {
+  await requireUserId();
+
+  if (!inicioIso || !fimIso) return { ok: false, message: "Informe o período (início e fim)." };
+  if (tipos.length === 0) return { ok: false, message: "Selecione ao menos um tipo de veículo." };
+
+  const inicio = new Date(inicioIso);
+  const fim = new Date(fimIso);
+  if (Number.isNaN(inicio.getTime()) || Number.isNaN(fim.getTime())) {
+    return { ok: false, message: "Data/hora inválida." };
   }
+  if (inicio > fim) return { ok: false, message: "O início precisa ser antes do fim." };
 
-  const naoProcessadas = noticias.filter((n) => n.resumo === null);
-  if (naoProcessadas.length > 0) {
-    return {
-      ok: false,
-      message: `Ainda há ${naoProcessadas.length} notícia(s) não processada(s) nesse período — processe em "Revisar" antes de exportar.`,
-    };
-  }
+  const preparo = await prepararExportacaoPeriodo(candidatoId, inicio, fim, tipos, "avulso", busca);
+  if (!preparo.ok) return preparo;
 
-  const mensagens = montarMensagens(noticias);
+  const mensagens = montarMensagens(preparo.noticiasUnificadas);
+  if (preparo.relatorio) mensagens.push(preparo.relatorio);
+
   return { ok: true, mensagens };
 }
 
@@ -61,12 +77,15 @@ export async function exportarPorHorarioAction(
  * então exportar só um dia arriscaria apagar notícias de outros dias que
  * só existem localmente.
  */
-export async function exportarBaseCompletaAction(): Promise<
-  { ok: true; json: string; filename: string } | { ok: false; message: string }
-> {
+export async function exportarBaseCompletaAction(
+  candidatoId: string,
+): Promise<{ ok: true; json: string; filename: string } | { ok: false; message: string }> {
   await requireUserId();
 
+  const candidato = await prisma.candidato.findUniqueOrThrow({ where: { id: candidatoId } });
+
   const noticias = await prisma.noticia.findMany({
+    where: { candidatoId },
     distinct: ["noticiaId"],
     select: {
       noticiaId: true,
@@ -85,6 +104,6 @@ export async function exportarBaseCompletaAction(): Promise<
     return { ok: false, message: "Nenhuma notícia importada ainda." };
   }
 
-  const vendor = montarExportVendor(noticias, PERSONAGEM);
-  return { ok: true, json: JSON.stringify(vendor, null, 4), filename: "prefeitura.json" };
+  const vendor = montarExportVendor(noticias, candidato.nome);
+  return { ok: true, json: JSON.stringify(vendor, null, 4), filename: `${candidato.slug}.json` };
 }
