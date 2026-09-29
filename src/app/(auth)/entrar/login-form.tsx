@@ -3,7 +3,8 @@
 import { useRouter } from "next/navigation";
 import { useAction } from "@/hooks/use-action";
 import { loginAction } from "@/server/auth";
-import { RainbowLoader } from "@/components/rainbow-loader";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 export function LoginForm() {
   const router = useRouter();
@@ -17,13 +18,7 @@ export function LoginForm() {
         <label htmlFor="email" className="block text-sm font-medium">
           E-mail
         </label>
-        <input
-          id="email"
-          name="email"
-          type="email"
-          autoComplete="email"
-          className="mt-1 w-full rounded-md border border-[var(--border)] bg-[var(--card)] px-3 py-2 text-sm"
-        />
+        <Input id="email" name="email" type="email" autoComplete="email" className="mt-1" />
         {fieldErrors?.email && (
           <p className="mt-1 text-sm text-[var(--negative)]">{fieldErrors.email[0]}</p>
         )}
@@ -33,12 +28,12 @@ export function LoginForm() {
         <label htmlFor="password" className="block text-sm font-medium">
           Senha
         </label>
-        <input
+        <Input
           id="password"
           name="password"
           type="password"
           autoComplete="current-password"
-          className="mt-1 w-full rounded-md border border-[var(--border)] bg-[var(--card)] px-3 py-2 text-sm"
+          className="mt-1"
         />
         {fieldErrors?.password && (
           <p className="mt-1 text-sm text-[var(--negative)]">{fieldErrors.password[0]}</p>
@@ -47,18 +42,13 @@ export function LoginForm() {
 
       {errorMessage && <p className="text-sm text-[var(--negative)]">{errorMessage}</p>}
 
-      <button
-        type="submit"
-        disabled={pending}
-        className="flex w-full items-center justify-center gap-2 rounded-md bg-[var(--primary)] px-3 py-2 text-sm font-medium text-[var(--primary-foreground)] disabled:opacity-60"
-      >
-        {pending && <RainbowLoader size={14} />}
+      <Button type="submit" loading={pending} className="w-full">
         {pending ? "Entrando…" : "Entrar"}
-      </button>
+      </Button>
       <noscript>
-        <button type="submit" className="w-full rounded-md border px-3 py-2 text-sm">
+        <Button type="submit" variant="outline" className="w-full">
           Entrar
-        </button>
+        </Button>
       </noscript>
     </form>
   );

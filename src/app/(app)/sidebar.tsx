@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { logoutAction } from "@/server/auth";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { CandidatoSwitcher } from "./candidato-switcher";
+import { Button } from "@/components/ui/button";
 
 type CandidatoOpcao = { slug: string; nome: string };
 
@@ -35,7 +36,7 @@ function ItemMenu({ href, label, ativo }: { href: string; label: string; ativo: 
       href={href}
       aria-current={ativo ? "page" : undefined}
       className={
-        "rounded-md px-3 py-2 text-sm font-medium transition-colors " +
+        "flex h-9 items-center rounded-md px-3 text-sm font-medium transition-colors " +
         (ativo
           ? "bg-[var(--primary)] text-[var(--primary-foreground)]"
           : "text-[var(--muted-foreground)] hover:bg-[var(--muted)] hover:text-[var(--foreground)]")
@@ -60,7 +61,7 @@ export function Sidebar({ candidatos, userEmail }: { candidatos: CandidatoOpcao[
     primeiroSegmento && !SEGMENTOS_RESERVADOS.has(primeiroSegmento) ? primeiroSegmento : undefined;
 
   return (
-    <nav className="sticky top-0 flex h-screen w-56 shrink-0 flex-col gap-4 overflow-y-auto border-r border-[var(--border)] p-4">
+    <nav className="sticky top-0 flex h-screen w-56 shrink-0 flex-col gap-4 overflow-y-auto border-r border-[var(--border)] bg-[var(--card)] p-4">
       <Link href="/" className="text-lg font-semibold">
         Iris
       </Link>
@@ -91,9 +92,9 @@ export function Sidebar({ candidatos, userEmail }: { candidatos: CandidatoOpcao[
         <div className="flex items-center justify-between">
           <ThemeToggle />
           <form action={logoutAction}>
-            <button type="submit" className="hover:text-[var(--foreground)]">
+            <Button type="submit" variant="ghost" size="sm" className="px-2">
               Sair
-            </button>
+            </Button>
           </form>
         </div>
       </div>

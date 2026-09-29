@@ -5,7 +5,8 @@ import { toast } from "sonner";
 import { calcularPicosAction } from "@/server/actions/picos";
 import type { Pico } from "@/server/queries/picos";
 import { formatarDataBR } from "@/lib/dates";
-import { RainbowLoader } from "@/components/rainbow-loader";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 export function PicosPanel({ candidatoId }: { candidatoId: string }) {
   const [dias, setDias] = useState(90);
@@ -32,31 +33,26 @@ export function PicosPanel({ candidatoId }: { candidatoId: string }) {
       <div className="flex items-end gap-2">
         <div>
           <label className="block text-sm font-medium">Dias de histórico</label>
-          <input
+          <Input
             type="number"
             value={dias}
             onChange={(e) => setDias(Number(e.target.value))}
-            className="mt-1 h-9 w-24 rounded-md border border-[var(--border)] bg-[var(--card)] px-2 text-sm"
+            className="mt-1 w-24"
           />
         </div>
         <div>
           <label className="block text-sm font-medium">Limiar (x acima da média)</label>
-          <input
+          <Input
             type="number"
             step="0.1"
             value={limiar}
             onChange={(e) => setLimiar(Number(e.target.value))}
-            className="mt-1 h-9 w-24 rounded-md border border-[var(--border)] bg-[var(--card)] px-2 text-sm"
+            className="mt-1 w-24"
           />
         </div>
-        <button
-          onClick={buscar}
-          disabled={pending}
-          className="flex h-9 items-center gap-2 rounded-md bg-[var(--primary)] px-4 text-sm font-medium text-[var(--primary-foreground)] disabled:opacity-60"
-        >
-          {pending && <RainbowLoader size={14} />}
+        <Button onClick={buscar} loading={pending}>
           {pending ? "Calculando…" : "Recalcular"}
-        </button>
+        </Button>
       </div>
 
       {picos && picos.length === 0 && (
@@ -68,7 +64,7 @@ export function PicosPanel({ candidatoId }: { candidatoId: string }) {
       {picos && picos.length > 0 && (
         <div className="space-y-3">
           {picos.map((pico) => (
-            <div key={pico.data} className="rounded-md border border-[var(--border)] p-4 text-sm">
+            <div key={pico.data} className="rounded-md border border-[var(--border)] bg-[var(--card)] p-4 text-sm">
               <p className="font-medium">
                 📈 {formatarDataBR(pico.data)} ({pico.diaSemana}) — {pico.volume} notícias
               </p>

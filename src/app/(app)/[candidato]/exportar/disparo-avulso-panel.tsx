@@ -3,7 +3,8 @@
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { exportarAvulsoAction } from "@/server/actions/exportar";
-import { RainbowLoader } from "@/components/rainbow-loader";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 const TIPOS_DISPONIVEIS = ["Rádio", "Televisão", "Online"];
 
@@ -45,7 +46,7 @@ export function DisparoAvulsoPanel({ candidatoId }: { candidatoId: string }) {
   }
 
   return (
-    <div className="space-y-3 rounded-md border border-[var(--border)] p-4">
+    <div className="space-y-3 rounded-md border border-[var(--border)] bg-[var(--card)] p-4">
       <h2 className="text-sm font-semibold">Disparo avulso</h2>
       <p className="text-xs text-[var(--muted-foreground)]">
         Período e tipo de veículo arbitrários, fora dos horários fixos acima — útil pra
@@ -56,30 +57,30 @@ export function DisparoAvulsoPanel({ candidatoId }: { candidatoId: string }) {
       <div className="flex flex-wrap items-end gap-2">
         <div>
           <label className="block text-sm font-medium">Início</label>
-          <input
+          <Input
             type="datetime-local"
             value={inicio}
             onChange={(e) => setInicio(e.target.value)}
-            className="mt-1 h-9 rounded-md border border-[var(--border)] bg-[var(--card)] px-2 text-sm"
+            className="mt-1 w-auto"
           />
         </div>
         <div>
           <label className="block text-sm font-medium">Fim</label>
-          <input
+          <Input
             type="datetime-local"
             value={fim}
             onChange={(e) => setFim(e.target.value)}
-            className="mt-1 h-9 rounded-md border border-[var(--border)] bg-[var(--card)] px-2 text-sm"
+            className="mt-1 w-auto"
           />
         </div>
         <div>
           <label className="block text-sm font-medium">Busca (opcional)</label>
-          <input
+          <Input
             type="text"
             value={busca}
             onChange={(e) => setBusca(e.target.value)}
             placeholder="Veículo, título ou transcrição…"
-            className="mt-1 h-9 rounded-md border border-[var(--border)] bg-[var(--card)] px-2 text-sm"
+            className="mt-1"
           />
         </div>
       </div>
@@ -93,14 +94,9 @@ export function DisparoAvulsoPanel({ candidatoId }: { candidatoId: string }) {
         ))}
       </div>
 
-      <button
-        onClick={gerar}
-        disabled={pending || !inicio || !fim}
-        className="flex h-9 items-center gap-2 rounded-md bg-[var(--primary)] px-4 text-sm font-medium text-[var(--primary-foreground)] disabled:opacity-60"
-      >
-        {pending && <RainbowLoader size={14} />}
+      <Button onClick={gerar} loading={pending} disabled={!inicio || !fim}>
         {pending ? "Gerando…" : "Gerar mensagens (avulso)"}
-      </button>
+      </Button>
 
       {mensagens && (
         <div className="space-y-2">

@@ -7,9 +7,10 @@ import {
   gerarRelatorioComparativoAction,
   gerarGraficosAction,
 } from "@/server/actions/relatorioGeral";
-import { RainbowLoader } from "@/components/rainbow-loader";
 import { GraficoRenderer } from "@/components/charts/GraficoRenderer";
 import type { SecaoGrafico } from "@/lib/relatorioGraficosDados";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 type CandidatoOpcao = { id: string; nome: string };
 type GraficosOk = { comparativo: SecaoGrafico[]; porCandidato: { nome: string; secoes: SecaoGrafico[] }[] };
@@ -106,31 +107,21 @@ export function RelatorioGeralPanel({ candidatos }: { candidatos: CandidatoOpcao
       <div className="flex flex-wrap items-end gap-2">
         <div>
           <label className="block text-sm font-medium">Janela rolante (dias)</label>
-          <input
+          <Input
             type="number"
             value={dias}
             onChange={(e) => setDias(Number(e.target.value))}
             disabled={Boolean(inicio && fim)}
-            className="mt-1 h-9 w-24 rounded-md border border-[var(--border)] bg-[var(--card)] px-2 text-sm disabled:opacity-50"
+            className="mt-1 w-24"
           />
         </div>
         <div>
           <label className="block text-sm font-medium">Ou início exato</label>
-          <input
-            type="date"
-            value={inicio}
-            onChange={(e) => setInicio(e.target.value)}
-            className="mt-1 h-9 rounded-md border border-[var(--border)] bg-[var(--card)] px-2 text-sm"
-          />
+          <Input type="date" value={inicio} onChange={(e) => setInicio(e.target.value)} className="mt-1 w-auto" />
         </div>
         <div>
           <label className="block text-sm font-medium">Fim exato</label>
-          <input
-            type="date"
-            value={fim}
-            onChange={(e) => setFim(e.target.value)}
-            className="mt-1 h-9 rounded-md border border-[var(--border)] bg-[var(--card)] px-2 text-sm"
-          />
+          <Input type="date" value={fim} onChange={(e) => setFim(e.target.value)} className="mt-1 w-auto" />
         </div>
       </div>
       <p className="text-xs text-[var(--muted-foreground)]">
@@ -139,22 +130,12 @@ export function RelatorioGeralPanel({ candidatos }: { candidatos: CandidatoOpcao
       </p>
 
       <div className="flex flex-wrap gap-2">
-        <button
-          onClick={gerar}
-          disabled={pending || selecionados.size === 0}
-          className="flex items-center gap-2 rounded-md bg-[var(--primary)] px-4 py-2 text-sm font-medium text-[var(--primary-foreground)] disabled:opacity-60"
-        >
-          {pending && <RainbowLoader size={14} />}
+        <Button onClick={gerar} loading={pending} disabled={selecionados.size === 0}>
           {pending ? "Gerando…" : `Gerar relatório${selecionados.size > 1 ? " comparativo" : ""} (.docx)`}
-        </button>
-        <button
-          onClick={verGraficos}
-          disabled={pendingGraficos || selecionados.size === 0}
-          className="flex items-center gap-2 rounded-md border border-[var(--border)] px-4 py-2 text-sm font-medium disabled:opacity-60"
-        >
-          {pendingGraficos && <RainbowLoader size={14} />}
+        </Button>
+        <Button onClick={verGraficos} loading={pendingGraficos} disabled={selecionados.size === 0} variant="outline">
           {pendingGraficos ? "Calculando…" : "Ver gráficos"}
-        </button>
+        </Button>
       </div>
 
       {graficos && (

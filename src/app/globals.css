@@ -4,13 +4,16 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  /* Paleta neutra (preto/branco/cinza) — sem matiz, minimalista. */
-  --background: oklch(0.98 0 0);
+  /* Paleta neutra (preto/branco/cinza) — sem matiz, minimalista. Fundo da
+     página visivelmente mais escuro que o dos cartões (antes os dois
+     eram quase idênticos, 0.98 vs 1 — os painéis não se destacavam do
+     fundo, diferente das referências de dashboard). */
+  --background: oklch(0.955 0 0);
   --foreground: oklch(0.17 0 0);
   --card: oklch(1 0 0);
   --muted: oklch(0.96 0 0);
   --muted-foreground: oklch(0.5 0 0);
-  --border: oklch(0.9 0 0);
+  --border: oklch(0.88 0 0);
 
   --primary: oklch(0.17 0 0);
   --primary-foreground: oklch(0.99 0 0);
@@ -24,6 +27,12 @@
   --chart-1: #2a78d6; /* azul */
   --chart-2: #eb6834; /* laranja */
   --chart-3: #1baf7a; /* água */
+
+  /* Único destaque de cor do app (fora dos tokens de status/gráfico) —
+     anel de foco de botão/input e pequenos realces pontuais (ex: item
+     ativo do menu). Reaproveita --chart-1 de propósito: um só azul em
+     todo o app, não mais um. */
+  --ring: var(--chart-1);
 }
 
 .dark {
@@ -44,6 +53,8 @@
   --chart-1: #3987e5;
   --chart-2: #d95926;
   --chart-3: #199e70;
+
+  --ring: var(--chart-1);
 }
 
 body {
@@ -52,7 +63,11 @@ body {
 }
 
 button:not(:disabled),
-[role="button"]:not(:disabled) {
+[role="button"]:not(:disabled),
+input[type="checkbox"]:not(:disabled),
+input[type="radio"]:not(:disabled),
+select:not(:disabled),
+label:has(> input:not(:disabled)) {
   cursor: pointer;
 }
 
@@ -64,4 +79,74 @@ button:not(:disabled),
 
 .iris-rainbow-loader {
   animation: iris-spin 0.8s linear infinite;
+}
+
+/* PageLoader (page-loader.tsx) — cartinha voando + rastro arco-íris, pra
+   troca de tela. Duas animações sincronizadas na mesma duração: o rastro
+   "desenha" (stroke-dashoffset) enquanto o envelope viaja por cima via
+   motion path — ambos somem no fim do ciclo pra recomeçar sem salto visível. */
+.iris-mail__envelope {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 28px;
+  height: 19px;
+  offset-anchor: 50% 50%;
+  offset-rotate: auto;
+  animation: iris-mail-fly 2.4s linear infinite;
+}
+
+.iris-mail__rastro {
+  stroke-dasharray: 320;
+  stroke-dashoffset: 320;
+  animation: iris-mail-trilha 2.4s linear infinite;
+}
+
+@keyframes iris-mail-fly {
+  0% {
+    offset-distance: 0%;
+    opacity: 0;
+  }
+  6% {
+    opacity: 1;
+  }
+  82% {
+    opacity: 1;
+  }
+  100% {
+    offset-distance: 100%;
+    opacity: 0;
+  }
+}
+
+@keyframes iris-mail-trilha {
+  0% {
+    stroke-dashoffset: 320;
+    opacity: 0.85;
+  }
+  82% {
+    stroke-dashoffset: 0;
+    opacity: 0.85;
+  }
+  100% {
+    stroke-dashoffset: 0;
+    opacity: 0;
+  }
+}
+
+/* Sem sensação de movimento pra quem pediu isso ao sistema — mostra o
+   envelope parado na metade do trajeto com o rastro já desenhado. */
+@media (prefers-reduced-motion: reduce) {
+  .iris-mail__envelope,
+  .iris-mail__rastro {
+    animation: none;
+  }
+  .iris-mail__envelope {
+    offset-distance: 55%;
+    opacity: 1;
+  }
+  .iris-mail__rastro {
+    stroke-dashoffset: 70;
+    opacity: 0.85;
+  }
 }

@@ -5,8 +5,9 @@ import { toast } from "sonner";
 import { useAction } from "@/hooks/use-action";
 import { processarItemAction } from "@/server/actions/processar";
 import { salvarRevisaoAction } from "@/server/actions/revisar";
-import { RainbowLoader } from "@/components/rainbow-loader";
 import { formatarDataHoraBR } from "@/lib/dates";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { Input, Select, Textarea } from "@/components/ui/input";
 
 export type NoticiaVM = {
   id: string;
@@ -85,14 +86,9 @@ export function NoticiaRow({
           </span>
         </div>
         {!processado && (
-          <button
-            onClick={processar}
-            disabled={pending}
-            className="shrink-0 flex items-center gap-2 rounded-md bg-[var(--primary)] px-3 py-1 text-xs font-medium text-[var(--primary-foreground)] disabled:opacity-60"
-          >
-            {pending && <RainbowLoader size={12} />}
+          <Button onClick={processar} loading={pending} size="sm" className="shrink-0">
             {pending ? "Processando…" : "Processar"}
-          </button>
+          </Button>
         )}
       </div>
 
@@ -135,27 +131,21 @@ export function NoticiaRow({
             </div>
           )}
 
-          <div className="flex flex-wrap items-center gap-2 text-xs">
-            <button
-              onClick={() => setEditando(true)}
-              className="rounded-md border border-[var(--border)] px-2.5 py-1 font-medium hover:bg-[var(--muted)]"
-            >
+          <div className="flex flex-wrap items-center gap-2">
+            <Button onClick={() => setEditando(true)} variant="outline" size="sm">
               Editar
-            </button>
+            </Button>
             {noticia.transcricao && (
-              <button
-                onClick={() => setMostrarTranscricao((v) => !v)}
-                className="rounded-md border border-[var(--border)] px-2.5 py-1 font-medium hover:bg-[var(--muted)]"
-              >
+              <Button onClick={() => setMostrarTranscricao((v) => !v)} variant="outline" size="sm">
                 {mostrarTranscricao ? "Ocultar transcrição" : "Ver transcrição"}
-              </button>
+              </Button>
             )}
             {noticia.urlMidia && (
               <a
                 href={noticia.urlMidia}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="rounded-md border border-[var(--border)] px-2.5 py-1 font-medium hover:bg-[var(--muted)]"
+                className={buttonVariants("outline", "sm")}
               >
                 Abrir mídia ↗
               </a>
@@ -193,49 +183,35 @@ function EditForm({
     <form action={formAction} className="mt-2 space-y-2">
       <input type="hidden" name="id" value={noticia.id} />
 
-      <textarea
-        name="resumo"
-        defaultValue={noticia.resumo ?? ""}
-        rows={3}
-        className="w-full rounded-md border border-[var(--border)] bg-[var(--card)] px-2 py-1 text-sm"
-      />
+      <Textarea name="resumo" defaultValue={noticia.resumo ?? ""} rows={3} />
 
       <div className="flex gap-2">
-        <select
-          name="sentimentoFinal"
-          defaultValue={noticia.sentimentoFinal ?? "Neutro"}
-          className="rounded-md border border-[var(--border)] bg-[var(--card)] px-2 py-1 text-sm"
-        >
+        <Select name="sentimentoFinal" defaultValue={noticia.sentimentoFinal ?? "Neutro"} className="w-32">
           {SENTIMENTOS.map((s) => (
             <option key={s} value={s}>
               {s}
             </option>
           ))}
-        </select>
+        </Select>
 
-        <input
+        <Input
           name="secretaria"
           defaultValue={noticia.secretaria ?? "Outro"}
           placeholder={rotuloClassificacao === "secretaria" ? "Secretaria" : "Tema"}
           aria-label={rotuloClassificacao}
-          className="flex-1 rounded-md border border-[var(--border)] bg-[var(--card)] px-2 py-1 text-sm"
+          className="flex-1"
         />
       </div>
 
       {errorMessage && <p className="text-sm text-[var(--negative)]">{errorMessage}</p>}
 
-      <div className="flex gap-2">
-        <button
-          type="submit"
-          disabled={pending}
-          className="flex items-center gap-2 rounded-md bg-[var(--primary)] px-3 py-1 text-xs font-medium text-[var(--primary-foreground)] disabled:opacity-60"
-        >
-          {pending && <RainbowLoader size={12} />}
+      <div className="flex items-center gap-2">
+        <Button type="submit" loading={pending} size="sm">
           {pending ? "Salvando…" : "Salvar"}
-        </button>
-        <button type="button" onClick={onDone} className="text-xs underline">
+        </Button>
+        <Button type="button" onClick={onDone} variant="ghost" size="sm">
           Cancelar
-        </button>
+        </Button>
       </div>
     </form>
   );

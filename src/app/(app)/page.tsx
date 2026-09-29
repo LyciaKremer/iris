@@ -22,7 +22,7 @@ export default async function SeletorCandidatoPage() {
             <Link
               key={c.slug}
               href={`/${c.slug}`}
-              className="rounded-md border border-[var(--border)] p-4 hover:bg-[var(--muted)]"
+              className="rounded-md border border-[var(--border)] bg-[var(--card)] p-4 transition-colors hover:bg-[var(--muted)]"
             >
               <p className="font-medium">{c.nome}</p>
               <p className="text-xs text-[var(--muted-foreground)]">

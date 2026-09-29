@@ -7,6 +7,8 @@ import { formatarDataBR, hojeBR } from "@/lib/dates";
 import { calcularRelatorioAction, baixarRelatorioAction } from "@/server/actions/relatorio";
 import type { RelatorioSemanal, RankingItem } from "@/lib/relatorioSemanal";
 import { RainbowLoader } from "@/components/rainbow-loader";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 export function RelatorioPanel({ candidatoId, candidatoSlug }: { candidatoId: string; candidatoSlug: string }) {
   const [dataReferencia, setDataReferencia] = useState(hojeBR);
@@ -51,11 +53,11 @@ export function RelatorioPanel({ candidatoId, candidatoSlug }: { candidatoId: st
     <div className="space-y-6">
       <div>
         <label className="block text-sm font-medium">Qualquer dia da semana desejada</label>
-        <input
+        <Input
           type="date"
           value={dataReferencia}
           onChange={(e) => setDataReferencia(e.target.value)}
-          className="mt-1 h-9 rounded-md border border-[var(--border)] bg-[var(--card)] px-2 text-sm"
+          className="mt-1 w-auto"
         />
         <p className="mt-1 text-xs text-[var(--muted-foreground)]">
           Semana: {formatarDataBR(periodo.inicio)} a {formatarDataBR(periodo.fim)}
@@ -63,22 +65,17 @@ export function RelatorioPanel({ candidatoId, candidatoSlug }: { candidatoId: st
       </div>
 
       <div className="flex gap-2">
-        <button
-          onClick={() => baixar("docx")}
-          disabled={baixando !== null || !relatorio}
-          className="flex items-center gap-2 rounded-md bg-[var(--primary)] px-4 py-2 text-sm font-medium text-[var(--primary-foreground)] disabled:opacity-60"
-        >
-          {baixando === "docx" && <RainbowLoader size={14} />}
+        <Button onClick={() => baixar("docx")} loading={baixando === "docx"} disabled={baixando !== null || !relatorio}>
           {baixando === "docx" ? "Gerando…" : "Baixar .docx"}
-        </button>
-        <button
+        </Button>
+        <Button
           onClick={() => baixar("pdf")}
+          loading={baixando === "pdf"}
           disabled={baixando !== null || !relatorio}
-          className="flex items-center gap-2 rounded-md border border-[var(--border)] px-4 py-2 text-sm font-medium disabled:opacity-60"
+          variant="outline"
         >
-          {baixando === "pdf" && <RainbowLoader size={14} />}
           {baixando === "pdf" ? "Gerando…" : "Baixar PDF"}
-        </button>
+        </Button>
       </div>
 
       {pending && (
@@ -132,7 +129,7 @@ export function RelatorioPanel({ candidatoId, candidatoSlug }: { candidatoId: st
 
 function Secao({ titulo, children }: { titulo: string; children: React.ReactNode }) {
   return (
-    <div className="rounded-md border border-[var(--border)] p-4">
+    <div className="rounded-md border border-[var(--border)] bg-[var(--card)] p-4">
       <h2 className="mb-3 text-sm font-semibold">{titulo}</h2>
       {children}
     </div>

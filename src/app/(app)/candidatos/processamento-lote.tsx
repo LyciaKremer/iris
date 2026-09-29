@@ -4,8 +4,9 @@ import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { listarPendentesPorHorarioAction, processarItemAction } from "@/server/actions/processar";
 import { TODOS_HORARIOS, horarioValidoPara, type Horario } from "@/lib/horarios";
-import { RainbowLoader } from "@/components/rainbow-loader";
 import { Modal } from "@/components/modal";
+import { Button } from "@/components/ui/button";
+import { Input, Select } from "@/components/ui/input";
 import { hojeBR } from "@/lib/dates";
 
 type CandidatoOpcao = { id: string; slug: string; nome: string; tipo: "pessoa" | "instituicao" };
@@ -100,12 +101,9 @@ export function ProcessamentoLote({ candidatos }: { candidatos: CandidatoOpcao[]
 
   return (
     <>
-      <button
-        onClick={() => setAberto(true)}
-        className="rounded-md border border-[var(--border)] px-4 py-2 text-sm font-medium"
-      >
+      <Button onClick={() => setAberto(true)} variant="outline">
         Processar em lote
-      </button>
+      </Button>
 
       {aberto && (
         <Modal titulo="Processar em lote" onClose={() => setAberto(false)} largura="max-w-xl">
@@ -119,28 +117,28 @@ export function ProcessamentoLote({ candidatos }: { candidatos: CandidatoOpcao[]
             <div className="flex flex-wrap items-end gap-3">
               <div>
                 <label className="block text-sm font-medium">Data</label>
-                <input
+                <Input
                   type="date"
                   value={data}
                   onChange={(e) => setData(e.target.value)}
                   disabled={pending}
-                  className="mt-1 h-9 rounded-md border border-[var(--border)] bg-[var(--card)] px-2 text-sm disabled:opacity-60"
+                  className="mt-1"
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium">Horário</label>
-                <select
+                <Select
                   value={horario}
                   onChange={(e) => setHorario(e.target.value as Horario)}
                   disabled={pending}
-                  className="mt-1 h-9 rounded-md border border-[var(--border)] bg-[var(--card)] px-2 text-sm disabled:opacity-60"
+                  className="mt-1"
                 >
                   {TODOS_HORARIOS.map((h) => (
                     <option key={h} value={h}>
                       {h}
                     </option>
                   ))}
-                </select>
+                </Select>
               </div>
             </div>
 
@@ -177,14 +175,9 @@ export function ProcessamentoLote({ candidatos }: { candidatos: CandidatoOpcao[]
               </p>
             )}
 
-            <button
-              onClick={processar}
-              disabled={pending || selecionados.size === 0}
-              className="flex items-center gap-2 rounded-md bg-[var(--primary)] px-4 py-2 text-sm font-medium text-[var(--primary-foreground)] disabled:opacity-60"
-            >
-              {pending && <RainbowLoader size={14} />}
+            <Button onClick={processar} loading={pending} disabled={selecionados.size === 0}>
               {pending ? "Processando…" : `Processar selecionados (${selecionados.size})`}
-            </button>
+            </Button>
 
             {progresso && (
               <div className="space-y-1 rounded-md border border-[var(--border)] bg-[var(--muted)] p-3 text-xs">

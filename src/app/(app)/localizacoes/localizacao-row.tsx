@@ -3,7 +3,7 @@
 import { useTransition } from "react";
 import { toast } from "sonner";
 import { removerLocalizacaoAction } from "@/server/actions/localizacoes";
-import { RainbowLoader } from "@/components/rainbow-loader";
+import { Button } from "@/components/ui/button";
 
 export type LocalizacaoVM = { veiculo: string; cidade: string; regiao: string; tipoFonte: string | null };
 
@@ -18,7 +18,7 @@ export function LocalizacaoRow({ localizacao }: { localizacao: LocalizacaoVM }) 
   }
 
   return (
-    <div className="flex items-center justify-between rounded-md border border-[var(--border)] p-3 text-sm">
+    <div className="flex items-center justify-between rounded-md border border-[var(--border)] bg-[var(--card)] p-3 text-sm">
       <div>
         <p className="font-medium">{localizacao.veiculo}</p>
         <p className="text-xs text-[var(--muted-foreground)]">
@@ -26,14 +26,9 @@ export function LocalizacaoRow({ localizacao }: { localizacao: LocalizacaoVM }) 
           {localizacao.tipoFonte && ` · ${localizacao.tipoFonte}`}
         </p>
       </div>
-      <button
-        onClick={remover}
-        disabled={pending}
-        className="flex items-center gap-2 rounded-md border border-[var(--border)] px-2.5 py-1 text-xs font-medium hover:bg-[var(--muted)] disabled:opacity-60"
-      >
-        {pending && <RainbowLoader size={12} />}
+      <Button onClick={remover} loading={pending} variant="outline" size="sm">
         Remover
-      </button>
+      </Button>
     </div>
   );
 }

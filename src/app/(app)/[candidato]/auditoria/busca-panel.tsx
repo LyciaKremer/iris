@@ -4,7 +4,8 @@ import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { buscarNoticiasAction } from "@/server/actions/auditoria";
 import { formatarDataHoraBR } from "@/lib/dates";
-import { RainbowLoader } from "@/components/rainbow-loader";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 type Resultado = Awaited<ReturnType<typeof buscarNoticiasAction>>[number];
 
@@ -31,21 +32,16 @@ export function BuscaPanel({
   return (
     <div className="space-y-4">
       <div className="flex gap-2">
-        <input
+        <Input
           value={termo}
           onChange={(e) => setTermo(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && buscar()}
           placeholder="Id, veículo, trecho do resumo ou da transcrição…"
-          className="h-9 flex-1 rounded-md border border-[var(--border)] bg-[var(--card)] px-3 text-sm"
+          className="flex-1"
         />
-        <button
-          onClick={buscar}
-          disabled={pending || !termo.trim()}
-          className="flex h-9 items-center gap-2 rounded-md bg-[var(--primary)] px-4 text-sm font-medium text-[var(--primary-foreground)] disabled:opacity-60"
-        >
-          {pending && <RainbowLoader size={14} />}
+        <Button onClick={buscar} loading={pending} disabled={!termo.trim()}>
           {pending ? "Buscando…" : "Buscar"}
-        </button>
+        </Button>
       </div>
 
       {resultados && (
@@ -72,8 +68,11 @@ function DetalheNoticia({
   const [aberto, setAberto] = useState(false);
 
   return (
-    <div className="rounded-md border border-[var(--border)] p-4 text-sm">
-      <button onClick={() => setAberto(!aberto)} className="flex w-full items-center justify-between text-left">
+    <div className="rounded-md border border-[var(--border)] bg-[var(--card)] p-4 text-sm">
+      <button
+        onClick={() => setAberto(!aberto)}
+        className="flex w-full cursor-pointer items-center justify-between text-left"
+      >
         <span>
           <span className="font-medium">{noticia.veiculo}</span>{" "}
           <span className="text-[var(--muted-foreground)]">

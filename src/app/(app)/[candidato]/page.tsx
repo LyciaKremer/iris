@@ -2,6 +2,7 @@ import Link from "next/link";
 import { listarResumoPorData } from "@/server/queries/noticias";
 import { getCandidatoPorSlug } from "@/server/queries/candidatos";
 import { formatarDataBR } from "@/lib/dates";
+import { buttonVariants } from "@/components/ui/button";
 
 export default async function DashboardPage({ params }: { params: Promise<{ candidato: string }> }) {
   const { candidato: slug } = await params;
@@ -12,7 +13,7 @@ export default async function DashboardPage({ params }: { params: Promise<{ cand
     <div className="space-y-6">
       <h1 className="text-xl font-semibold">Início — {candidato.nome}</h1>
 
-      <div className="space-y-2 rounded-md border border-[var(--border)] p-4 text-sm">
+      <div className="space-y-2 rounded-md border border-[var(--border)] bg-[var(--card)] p-4 text-sm">
         <p>
           <strong>1. Importar</strong> — cola o JSON exportado da plataforma de clipping (uma
           página por vez, acumula sem duplicar).
@@ -40,7 +41,8 @@ export default async function DashboardPage({ params }: { params: Promise<{ cand
               return (
                 <div
                   key={dia.dataExecucao}
-                  className="flex items-center justify-between rounded-md border border-[var(--border)] p-3"
+                  className="flex items-center justify-between rounded-md border border-l-4 border-[var(--border)] bg-[var(--card)] p-3"
+                  style={{ borderLeftColor: tudoPronto ? "var(--positive)" : "var(--negative)" }}
                 >
                   <div>
                     <p className="text-sm font-medium">{formatarDataBR(dia.dataExecucao)}</p>
@@ -53,17 +55,11 @@ export default async function DashboardPage({ params }: { params: Promise<{ cand
                       )}
                     </p>
                   </div>
-                  <div className="flex gap-2 text-sm">
-                    <Link
-                      href={`/${slug}/revisar?data=${dia.dataExecucao}`}
-                      className="rounded-md border border-[var(--border)] px-3 py-1 hover:bg-[var(--muted)]"
-                    >
+                  <div className="flex gap-2">
+                    <Link href={`/${slug}/revisar?data=${dia.dataExecucao}`} className={buttonVariants("outline", "sm")}>
                       Revisar
                     </Link>
-                    <Link
-                      href={`/${slug}/exportar`}
-                      className="rounded-md border border-[var(--border)] px-3 py-1 hover:bg-[var(--muted)]"
-                    >
+                    <Link href={`/${slug}/exportar`} className={buttonVariants("outline", "sm")}>
                       Exportar
                     </Link>
                   </div>

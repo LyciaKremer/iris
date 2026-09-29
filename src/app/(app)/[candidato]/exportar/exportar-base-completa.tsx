@@ -3,7 +3,7 @@
 import { useTransition } from "react";
 import { toast } from "sonner";
 import { exportarBaseCompletaAction } from "@/server/actions/exportar";
-import { RainbowLoader } from "@/components/rainbow-loader";
+import { Button } from "@/components/ui/button";
 
 export function ExportarBaseCompleta({
   candidatoId,
@@ -32,7 +32,7 @@ export function ExportarBaseCompleta({
   }
 
   return (
-    <div className="space-y-2 rounded-md border border-[var(--border)] p-4">
+    <div className="space-y-2 rounded-md border border-[var(--border)] bg-[var(--card)] p-4">
       <h2 className="text-sm font-semibold">Base completa pro pipeline local</h2>
       <p className="text-sm text-[var(--muted-foreground)]">
         Baixa TODAS as notícias já importadas no Iris (não só a data selecionada acima) no
@@ -40,14 +40,9 @@ export function ExportarBaseCompleta({
         <code>python mergeJson.py {candidatoSlug}</code> pra continuar usando o download de mídia
         (<code>baixar_midias.py</code>) local normalmente.
       </p>
-      <button
-        onClick={baixar}
-        disabled={pending}
-        className="flex items-center gap-2 rounded-md border border-[var(--border)] px-4 py-2 text-sm font-medium disabled:opacity-60"
-      >
-        {pending && <RainbowLoader size={14} />}
+      <Button onClick={baixar} loading={pending} variant="outline">
         {pending ? "Gerando…" : `Baixar ${candidatoSlug}.json`}
-      </button>
+      </Button>
     </div>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter, usePathname } from "next/navigation";
+import { Select } from "@/components/ui/input";
 
 type CandidatoOpcao = { slug: string; nome: string };
 
@@ -24,17 +25,13 @@ export function CandidatoSwitcher({
   if (candidatos.length === 0) return null;
 
   return (
-    <select
-      value={atual ?? ""}
-      onChange={(e) => trocar(e.target.value)}
-      className="h-9 w-full rounded-md border border-[var(--border)] bg-[var(--card)] px-2 text-sm"
-    >
+    <Select value={atual ?? ""} onChange={(e) => trocar(e.target.value)}>
       {!atual && <option value="" disabled>Selecione um candidato</option>}
       {candidatos.map((c) => (
         <option key={c.slug} value={c.slug}>
           {c.nome}
         </option>
       ))}
-    </select>
+    </Select>
   );
 }

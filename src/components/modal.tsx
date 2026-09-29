@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { Button } from "@/components/ui/button";
 
 /** Overlay + card genérico — mesmo padrão visual já usado em
  * checklist-flutuante.tsx (ESC fecha, clique fora fecha, clique dentro
@@ -32,13 +33,9 @@ export function Modal({
       >
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-sm font-semibold">{titulo}</h2>
-          <button
-            onClick={onClose}
-            aria-label="Fechar"
-            className="text-sm text-[var(--muted-foreground)]"
-          >
+          <Button onClick={onClose} aria-label="Fechar" variant="ghost" size="sm" className="w-8 px-0">
             ✕
-          </button>
+          </Button>
         </div>
         {children}
       </div>

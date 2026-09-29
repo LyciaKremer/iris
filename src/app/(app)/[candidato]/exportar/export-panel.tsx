@@ -6,7 +6,8 @@ import JSZip from "jszip";
 import { exportarPorHorarioAction } from "@/server/actions/exportar";
 import { prepararConferenciaAction } from "@/server/actions/conferencia";
 import { horariosPorTipo, type Horario } from "@/lib/horarios";
-import { RainbowLoader } from "@/components/rainbow-loader";
+import { Button } from "@/components/ui/button";
+import { Input, Select } from "@/components/ui/input";
 import { hojeBR } from "@/lib/dates";
 
 const LEGENDA_INSTITUICAO =
@@ -88,43 +89,24 @@ export function ExportPanel({ candidatoId, tipo }: { candidatoId: string; tipo: 
       <div className="flex items-end gap-2">
         <div>
           <label className="block text-sm font-medium">Data do disparo</label>
-          <input
-            type="date"
-            value={data}
-            onChange={(e) => setData(e.target.value)}
-            className="mt-1 h-9 rounded-md border border-[var(--border)] bg-[var(--card)] px-2 text-sm"
-          />
+          <Input type="date" value={data} onChange={(e) => setData(e.target.value)} className="mt-1 w-auto" />
         </div>
         <div>
           <label className="block text-sm font-medium">Envio</label>
-          <select
-            value={horario}
-            onChange={(e) => setHorario(e.target.value as Horario)}
-            className="mt-1 h-9 rounded-md border border-[var(--border)] bg-[var(--card)] px-2 text-sm"
-          >
+          <Select value={horario} onChange={(e) => setHorario(e.target.value as Horario)} className="mt-1 w-auto">
             {horarios.map((h) => (
               <option key={h} value={h}>
                 {h}
               </option>
             ))}
-          </select>
+          </Select>
         </div>
-        <button
-          onClick={gerar}
-          disabled={pending || !data}
-          className="flex h-9 items-center gap-2 rounded-md bg-[var(--primary)] px-4 text-sm font-medium text-[var(--primary-foreground)] disabled:opacity-60"
-        >
-          {pending && <RainbowLoader size={14} />}
+        <Button onClick={gerar} loading={pending} disabled={!data}>
           {pending ? "Gerando…" : "Gerar mensagens"}
-        </button>
-        <button
-          onClick={baixarConferencia}
-          disabled={pendingConferencia || !data}
-          className="flex h-9 items-center gap-2 rounded-md border border-[var(--border)] px-4 text-sm font-medium disabled:opacity-60"
-        >
-          {pendingConferencia && <RainbowLoader size={14} />}
+        </Button>
+        <Button onClick={baixarConferencia} loading={pendingConferencia} disabled={!data} variant="outline">
           {pendingConferencia ? "Gerando…" : "Baixar conferência (.zip)"}
-        </button>
+        </Button>
       </div>
 
       <p className="text-xs text-[var(--muted-foreground)]">
@@ -135,19 +117,16 @@ export function ExportPanel({ candidatoId, tipo }: { candidatoId: string; tipo: 
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <p className="text-sm text-[var(--muted-foreground)]">{mensagens.length} mensagem(ns) geradas.</p>
-            <button onClick={baixar} className="rounded-md border border-[var(--border)] px-3 py-1 text-xs">
+            <Button onClick={baixar} variant="outline" size="sm">
               Baixar JSON
-            </button>
+            </Button>
           </div>
 
           <div className="flex items-center justify-between gap-2 rounded-md border border-[var(--border)] bg-[var(--muted)] p-3">
             <code className="overflow-x-auto whitespace-nowrap text-xs">{comando}</code>
-            <button
-              onClick={copiarComando}
-              className="shrink-0 rounded-md border border-[var(--border)] bg-[var(--card)] px-3 py-1 text-xs"
-            >
+            <Button onClick={copiarComando} variant="outline" size="sm" className="shrink-0">
               Copiar comando
-            </button>
+            </Button>
           </div>
 
           <div className="space-y-2">
