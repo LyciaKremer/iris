@@ -2,6 +2,7 @@
 
 import { useRef } from "react";
 import { toast } from "sonner";
+import { Upload } from "lucide-react";
 import { useAction } from "@/hooks/use-action";
 import { importarLocalizacoesAction } from "@/server/actions/localizacoes";
 import { Button } from "@/components/ui/button";
@@ -39,7 +40,7 @@ export function ImportarLocalizacoesForm() {
       {errorMessage && <p className="text-sm text-[var(--negative)]">{errorMessage}</p>}
 
       <Button type="submit" loading={pending}>
-        {pending ? "Importando…" : "Importar linhas"}
+        <Upload className="h-4 w-4" /> {pending ? "Importando…" : "Importar linhas"}
       </Button>
     </form>
   );

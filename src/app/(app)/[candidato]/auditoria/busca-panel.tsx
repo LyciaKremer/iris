@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
+import { Search, ChevronUp, ChevronDown, TriangleAlert, ExternalLink } from "lucide-react";
 import { buscarNoticiasAction } from "@/server/actions/auditoria";
 import { formatarDataHoraBR } from "@/lib/dates";
 import { Button } from "@/components/ui/button";
@@ -40,7 +41,7 @@ export function BuscaPanel({
           className="flex-1"
         />
         <Button onClick={buscar} loading={pending} disabled={!termo.trim()}>
-          {pending ? "Buscando…" : "Buscar"}
+          <Search className="h-4 w-4" /> {pending ? "Buscando…" : "Buscar"}
         </Button>
       </div>
 
@@ -79,7 +80,11 @@ function DetalheNoticia({
             · {noticia.tipoVeiculo} · {formatarDataHoraBR(noticia.dataPublicacao)}
           </span>
         </span>
-        <span className="text-xs text-[var(--muted-foreground)]">{aberto ? "▲" : "▼"}</span>
+        {aberto ? (
+          <ChevronUp className="h-4 w-4 shrink-0 text-[var(--muted-foreground)]" />
+        ) : (
+          <ChevronDown className="h-4 w-4 shrink-0 text-[var(--muted-foreground)]" />
+        )}
       </button>
 
       {aberto && (
@@ -97,16 +102,19 @@ function DetalheNoticia({
                 href={noticia.urlMidia}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="underline"
+                className="inline-flex items-center gap-1 underline"
               >
-                abrir áudio/vídeo original
+                abrir áudio/vídeo original <ExternalLink className="h-3.5 w-3.5" />
               </a>
             </p>
           )}
 
           {noticia.revisadoPelaIa && (
             <div className="rounded-md border border-[var(--border)] bg-[var(--muted)] p-2">
-              <p className="font-medium">⚠️ Corrigido automaticamente pela IA</p>
+              <p className="flex items-center gap-1.5 font-medium">
+                <TriangleAlert className="h-4 w-4 shrink-0 text-[var(--negative)]" /> Corrigido
+                automaticamente pela IA
+              </p>
               {noticia.problemaDetectado && <p className="mt-1">{noticia.problemaDetectado}</p>}
               {noticia.resumoOriginal && (
                 <p className="mt-1 italic text-[var(--muted-foreground)]">Original: {noticia.resumoOriginal}</p>

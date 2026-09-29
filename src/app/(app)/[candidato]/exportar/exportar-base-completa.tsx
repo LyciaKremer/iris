@@ -2,6 +2,7 @@
 
 import { useTransition } from "react";
 import { toast } from "sonner";
+import { Download } from "lucide-react";
 import { exportarBaseCompletaAction } from "@/server/actions/exportar";
 import { Button } from "@/components/ui/button";
 
@@ -41,7 +42,7 @@ export function ExportarBaseCompleta({
         (<code>baixar_midias.py</code>) local normalmente.
       </p>
       <Button onClick={baixar} loading={pending} variant="outline">
-        {pending ? "Gerando…" : `Baixar ${candidatoSlug}.json`}
+        <Download className="h-4 w-4" /> {pending ? "Gerando…" : `Baixar ${candidatoSlug}.json`}
       </Button>
     </div>
   );

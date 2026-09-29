@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 /** Overlay + card genérico — mesmo padrão visual já usado em
@@ -34,7 +35,7 @@ export function Modal({
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-sm font-semibold">{titulo}</h2>
           <Button onClick={onClose} aria-label="Fechar" variant="ghost" size="sm" className="w-8 px-0">
-            ✕
+            <X className="h-4 w-4" />
           </Button>
         </div>
         {children}

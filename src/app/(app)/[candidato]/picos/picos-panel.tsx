@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
+import { RefreshCw, TrendingUp } from "lucide-react";
 import { calcularPicosAction } from "@/server/actions/picos";
 import type { Pico } from "@/server/queries/picos";
 import { formatarDataBR } from "@/lib/dates";
@@ -51,7 +52,7 @@ export function PicosPanel({ candidatoId }: { candidatoId: string }) {
           />
         </div>
         <Button onClick={buscar} loading={pending}>
-          {pending ? "Calculando…" : "Recalcular"}
+          <RefreshCw className="h-4 w-4" /> {pending ? "Calculando…" : "Recalcular"}
         </Button>
       </div>
 
@@ -65,8 +66,9 @@ export function PicosPanel({ candidatoId }: { candidatoId: string }) {
         <div className="space-y-3">
           {picos.map((pico) => (
             <div key={pico.data} className="rounded-md border border-[var(--border)] bg-[var(--card)] p-4 text-sm">
-              <p className="font-medium">
-                📈 {formatarDataBR(pico.data)} ({pico.diaSemana}) — {pico.volume} notícias
+              <p className="flex items-center gap-1.5 font-medium">
+                <TrendingUp className="h-4 w-4 shrink-0 text-[var(--positive)]" />
+                {formatarDataBR(pico.data)} ({pico.diaSemana}) — {pico.volume} notícias
               </p>
               <p className="text-[var(--muted-foreground)]">
                 Média de {pico.diaSemana}s anteriores: {pico.mediaBaseline} · {pico.razao}x acima do

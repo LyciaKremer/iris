@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
+import { Pencil, Archive, ArchiveRestore, Check, X } from "lucide-react";
 import { useAction } from "@/hooks/use-action";
 import { atualizarCandidatoAction, alternarAtivoCandidatoAction } from "@/server/actions/candidatos";
 import { Button } from "@/components/ui/button";
@@ -44,9 +45,14 @@ export function CandidatoRow({ candidato }: { candidato: CandidatoVM }) {
       </div>
       <div className="flex gap-2">
         <Button onClick={() => setEditando(true)} variant="outline" size="sm">
-          Editar
+          <Pencil className="h-3.5 w-3.5" /> Editar
         </Button>
         <Button onClick={alternarAtivo} loading={pending} variant="outline" size="sm">
+          {candidato.ativo ? (
+            <Archive className="h-3.5 w-3.5" />
+          ) : (
+            <ArchiveRestore className="h-3.5 w-3.5" />
+          )}
           {candidato.ativo ? "Arquivar" : "Reativar"}
         </Button>
       </div>
@@ -79,10 +85,10 @@ function EditForm({ candidato, onDone }: { candidato: CandidatoVM; onDone: () =>
 
       <div className="flex items-center gap-2">
         <Button type="submit" loading={pending} size="sm">
-          {pending ? "Salvando…" : "Salvar"}
+          <Check className="h-3.5 w-3.5" /> {pending ? "Salvando…" : "Salvar"}
         </Button>
         <Button type="button" onClick={onDone} variant="ghost" size="sm">
-          Cancelar
+          <X className="h-3.5 w-3.5" /> Cancelar
         </Button>
       </div>
     </form>

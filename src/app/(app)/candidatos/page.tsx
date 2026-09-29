@@ -9,16 +9,17 @@ export default async function CandidatosPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-xl font-semibold">Candidatos</h1>
-        <p className="text-sm text-[var(--muted-foreground)]">
-          Cada candidato é um monitorado independente — pessoa (candidato político) ou instituição.
-          O tipo decide os prompts de IA e a grade de horários usados pra ele, e não muda depois
-          de criado.
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-xl font-semibold">Candidatos</h1>
+          <p className="text-sm text-[var(--muted-foreground)]">
+            Cada candidato é um monitorado independente — pessoa (candidato político) ou
+            instituição. O tipo decide os prompts de IA e a grade de horários usados pra ele, e não
+            muda depois de criado.
+          </p>
+        </div>
+        <NovoCandidatoForm />
       </div>
-
-      <NovoCandidatoForm />
 
       <div className="space-y-2">
         {candidatos.length === 0 ? (

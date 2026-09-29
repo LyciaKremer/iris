@@ -2,6 +2,7 @@
 
 import { useTransition } from "react";
 import { toast } from "sonner";
+import { Trash2 } from "lucide-react";
 import { removerLocalizacaoAction } from "@/server/actions/localizacoes";
 import { Button } from "@/components/ui/button";
 
@@ -27,7 +28,7 @@ export function LocalizacaoRow({ localizacao }: { localizacao: LocalizacaoVM }) 
         </p>
       </div>
       <Button onClick={remover} loading={pending} variant="outline" size="sm">
-        Remover
+        <Trash2 className="h-3.5 w-3.5" /> Remover
       </Button>
     </div>
   );

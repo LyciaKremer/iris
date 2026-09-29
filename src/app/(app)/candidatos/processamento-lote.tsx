@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
+import { ListChecks, RefreshCw } from "lucide-react";
 import { listarPendentesPorHorarioAction, processarItemAction } from "@/server/actions/processar";
 import { TODOS_HORARIOS, horarioValidoPara, type Horario } from "@/lib/horarios";
 import { Modal } from "@/components/modal";
@@ -102,7 +103,7 @@ export function ProcessamentoLote({ candidatos }: { candidatos: CandidatoOpcao[]
   return (
     <>
       <Button onClick={() => setAberto(true)} variant="outline">
-        Processar em lote
+        <ListChecks className="h-4 w-4" /> Processar em lote
       </Button>
 
       {aberto && (
@@ -131,7 +132,7 @@ export function ProcessamentoLote({ candidatos }: { candidatos: CandidatoOpcao[]
                   value={horario}
                   onChange={(e) => setHorario(e.target.value as Horario)}
                   disabled={pending}
-                  className="mt-1"
+                  className="mt-1 w-28"
                 >
                   {TODOS_HORARIOS.map((h) => (
                     <option key={h} value={h}>
@@ -176,6 +177,7 @@ export function ProcessamentoLote({ candidatos }: { candidatos: CandidatoOpcao[]
             )}
 
             <Button onClick={processar} loading={pending} disabled={selecionados.size === 0}>
+              <RefreshCw className="h-4 w-4" />{" "}
               {pending ? "Processando…" : `Processar selecionados (${selecionados.size})`}
             </Button>
 

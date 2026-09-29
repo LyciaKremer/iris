@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
+import { FileText, Download } from "lucide-react";
 import { calcularSemanaUtil } from "@/lib/semana";
 import { formatarDataBR, hojeBR } from "@/lib/dates";
 import { calcularRelatorioAction, baixarRelatorioAction } from "@/server/actions/relatorio";
@@ -66,7 +67,7 @@ export function RelatorioPanel({ candidatoId, candidatoSlug }: { candidatoId: st
 
       <div className="flex gap-2">
         <Button onClick={() => baixar("docx")} loading={baixando === "docx"} disabled={baixando !== null || !relatorio}>
-          {baixando === "docx" ? "Gerando…" : "Baixar .docx"}
+          <FileText className="h-4 w-4" /> {baixando === "docx" ? "Gerando…" : "Baixar .docx"}
         </Button>
         <Button
           onClick={() => baixar("pdf")}
@@ -74,7 +75,7 @@ export function RelatorioPanel({ candidatoId, candidatoSlug }: { candidatoId: st
           disabled={baixando !== null || !relatorio}
           variant="outline"
         >
-          {baixando === "pdf" ? "Gerando…" : "Baixar PDF"}
+          <Download className="h-4 w-4" /> {baixando === "pdf" ? "Gerando…" : "Baixar PDF"}
         </Button>
       </div>
 

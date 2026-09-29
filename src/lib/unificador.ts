@@ -51,8 +51,14 @@ function extrairJson(resposta: string): unknown {
  * Recebe notícias do mesmo tipo de veículo e sentimento e retorna uma
  * lista de grupos (listas de índices) — notícias que tratam do mesmo
  * fato/citação concreta ficam no mesmo grupo.
+ *
+ * Exportado: também é reaproveitado por temasAbordados.ts pra contar
+ * matérias Online duplicadas (mesmo fato coberto por vários portais) —
+ * ali só pra fins de contagem/título do relatório, nunca pra fundir texto
+ * (Online continua indo pro disparo como itens separados, cada um com seu
+ * próprio link).
  */
-async function agruparPorSimilaridade(itens: NoticiaUnificavel[], personagem: string): Promise<number[][]> {
+export async function agruparPorSimilaridade(itens: NoticiaUnificavel[], personagem: string): Promise<number[][]> {
   if (itens.length < 2) return itens.map((_, i) => [i]);
 
   const lista = itens.map((item, i) => `[${i}] (${item.veiculo}) ${item.resumo}`).join("\n");

@@ -1,6 +1,6 @@
 import "server-only";
 import { askClaude } from "@/lib/anthropic";
-import { filtrarElegiveis, type NoticiaUnificavel } from "@/lib/unificador";
+import { filtrarElegiveis, agruparPorSimilaridade, type NoticiaUnificavel } from "@/lib/unificador";
 
 /**
  * Porta de assuntos.py + relatorio.py (alertas-wpp) — a mensagem extra de
@@ -10,7 +10,7 @@ import { filtrarElegiveis, type NoticiaUnificavel } from "@/lib/unificador";
  */
 
 const EMOJI_SENTIMENTO: Record<string, string> = { Positivo: "🟢", Negativo: "🔴", Neutro: "🔵" };
-const EMOJI_TIPO: Record<string, string> = { Rádio: "📻", Televisão: "📺", Online: "🌐" };
+const EMOJI_TIPO: Record<string, string> = { Rádio: "📻", Televisão: "📺", Online: "📰" };
 const ORDEM_TIPOS = ["Rádio", "Televisão", "Online"];
 const ORDEM_SENTIMENTOS = ["Negativo", "Neutro", "Positivo"];
 
@@ -63,6 +63,45 @@ function qtdVeiculos(n: NoticiaUnificavel): number {
   return n.veiculo.split(", ").length;
 }
 
+/**
+ * Rádio/TV já chega aqui unificado por unificador.ts (um item = N
+ * veículos cobrindo o mesmo fato, contagem = qtdVeiculos). Online NUNCA
+ * passa por lá — cada matéria mantém seu próprio link na mensagem de
+ * disparo, de propósito — então o mesmo fato coberto por vários portais
+ * chegava aqui como N itens de contagem (1) em vez de 1 item de contagem
+ * (N) ("Onda Azul mobiliza Campina Grande" aparecendo 5x separado, por
+ * exemplo). Agrupa só pra fins de contagem/título do relatório — a
+ * mensagem de disparo em si não muda, continua um link por matéria.
+ */
+async function agruparAssuntosOnline(
+  itensOnline: NoticiaUnificavel[],
+  personagem: string,
+): Promise<{ item: NoticiaUnificavel; quantidade: number }[]> {
+  // Só compara similaridade dentro do mesmo sentimento — mesmo critério
+  // usado pra Rádio/TV em unificador.ts.
+  const porSentimento = new Map<string, NoticiaUnificavel[]>();
+  for (const n of itensOnline) {
+    const chave = n.sentimentoFinal ?? n.sentimentoOriginal;
+    porSentimento.set(chave, [...(porSentimento.get(chave) ?? []), n]);
+  }
+
+  const resultado: { item: NoticiaUnificavel; quantidade: number }[] = [];
+  for (const itens of porSentimento.values()) {
+    const grupos = await agruparPorSimilaridade(itens, personagem);
+    for (const indices of grupos) {
+      const itensDoGrupo = indices.map((i) => itens[i]);
+      // Representante: o de resumo/título mais curto (mais direto, com
+      // menos ruído de um veículo específico) — só decide qual título vai
+      // representar o grupo no relatório, nunca é enviado no disparo.
+      const representante = itensDoGrupo.reduce((menor, item) =>
+        (item.resumo?.length ?? 0) < (menor.resumo?.length ?? 0) ? item : menor,
+      );
+      resultado.push({ item: representante, quantidade: itensDoGrupo.length });
+    }
+  }
+  return resultado;
+}
+
 /** Monta o rótulo de tipo(s) de veículo pro cabeçalho — na maioria dos
  * casos é um único tipo (cada horário só processa um tipo por vez pra
  * candidatos pessoa); lista todos os presentes quando há mais de um
@@ -86,13 +125,25 @@ export async function gerarRelatorioTemas(
   const elegiveis = filtrarElegiveis(noticiasUnificadas);
   if (elegiveis.length < 2) return null;
 
-  const titulos = await gerarTitulos(elegiveis, personagem);
+  const online = elegiveis.filter((n) => n.tipoVeiculo === "Online");
+  const naoOnline = elegiveis.filter((n) => n.tipoVeiculo !== "Online");
+  const gruposOnline = await agruparAssuntosOnline(online, personagem);
+
+  const combinados: { item: NoticiaUnificavel; quantidade: number }[] = [
+    ...naoOnline.map((item) => ({ item, quantidade: qtdVeiculos(item) })),
+    ...gruposOnline,
+  ];
+
+  const titulos = await gerarTitulos(
+    combinados.map((c) => c.item),
+    personagem,
+  );
 
   const baldes = new Map<string, [string, number][]>();
-  elegiveis.forEach((n, i) => {
-    const sentimento = n.sentimentoFinal ?? n.sentimentoOriginal;
+  combinados.forEach(({ item, quantidade }, i) => {
+    const sentimento = item.sentimentoFinal ?? item.sentimentoOriginal;
     const lista = baldes.get(sentimento) ?? [];
-    lista.push([titulos[i], qtdVeiculos(n)]);
+    lista.push([titulos[i], quantidade]);
     baldes.set(sentimento, lista);
   });
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { LogIn } from "lucide-react";
 import { useAction } from "@/hooks/use-action";
 import { loginAction } from "@/server/auth";
 import { Button } from "@/components/ui/button";
@@ -43,11 +44,11 @@ export function LoginForm() {
       {errorMessage && <p className="text-sm text-[var(--negative)]">{errorMessage}</p>}
 
       <Button type="submit" loading={pending} className="w-full">
-        {pending ? "Entrando…" : "Entrar"}
+        <LogIn className="h-4 w-4" /> {pending ? "Entrando…" : "Entrar"}
       </Button>
       <noscript>
         <Button type="submit" variant="outline" className="w-full">
-          Entrar
+          <LogIn className="h-4 w-4" /> Entrar
         </Button>
       </noscript>
     </form>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import { useAction } from "@/hooks/use-action";
 import { criarCandidatoAction } from "@/server/actions/candidatos";
@@ -21,7 +22,9 @@ export function NovoCandidatoForm() {
 
   return (
     <>
-      <Button onClick={() => setAberto(true)}>+ Novo candidato</Button>
+      <Button onClick={() => setAberto(true)}>
+        <Plus className="h-4 w-4" /> Novo candidato
+      </Button>
 
       {aberto && (
         <Modal titulo="Novo candidato" onClose={() => setAberto(false)}>

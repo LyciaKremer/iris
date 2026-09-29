@@ -2,6 +2,19 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import {
+  Upload,
+  ClipboardCheck,
+  Send,
+  FileText,
+  TrendingUp,
+  Search,
+  Users,
+  MapPin,
+  BarChart3,
+  LogOut,
+  type LucideIcon,
+} from "lucide-react";
 import { logoutAction } from "@/server/auth";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { CandidatoSwitcher } from "./candidato-switcher";
@@ -10,12 +23,12 @@ import { Button } from "@/components/ui/button";
 type CandidatoOpcao = { slug: string; nome: string };
 
 const ITENS = [
-  { segmento: "importar", label: "Importar" },
-  { segmento: "revisar", label: "Revisar" },
-  { segmento: "exportar", label: "Exportar" },
-  { segmento: "relatorio", label: "Relatório" },
-  { segmento: "picos", label: "Picos" },
-  { segmento: "auditoria", label: "Auditoria" },
+  { segmento: "importar", label: "Importar", icone: Upload },
+  { segmento: "revisar", label: "Revisar", icone: ClipboardCheck },
+  { segmento: "exportar", label: "Exportar", icone: Send },
+  { segmento: "relatorio", label: "Relatório", icone: FileText },
+  { segmento: "picos", label: "Picos", icone: TrendingUp },
+  { segmento: "auditoria", label: "Auditoria", icone: Search },
 ];
 
 /** Único lugar que lista as rotas globais (fora de um candidato) — o
@@ -23,25 +36,36 @@ const ITENS = [
  * aconteceu de esquecer uma rota nova aqui e o menu tratar ela como se
  * fosse slug de candidato). */
 const ITENS_GLOBAIS = [
-  { href: "/candidatos", label: "Candidatos" },
-  { href: "/localizacoes", label: "Localizações" },
-  { href: "/relatorio-geral", label: "Relatório geral" },
+  { href: "/candidatos", label: "Candidatos", icone: Users },
+  { href: "/localizacoes", label: "Localizações", icone: MapPin },
+  { href: "/relatorio-geral", label: "Relatório geral", icone: BarChart3 },
 ];
 
 const SEGMENTOS_RESERVADOS = new Set(["entrar", ...ITENS_GLOBAIS.map((i) => i.href.slice(1))]);
 
-function ItemMenu({ href, label, ativo }: { href: string; label: string; ativo: boolean }) {
+function ItemMenu({
+  href,
+  label,
+  icone: Icone,
+  ativo,
+}: {
+  href: string;
+  label: string;
+  icone: LucideIcon;
+  ativo: boolean;
+}) {
   return (
     <Link
       href={href}
       aria-current={ativo ? "page" : undefined}
       className={
-        "flex h-9 items-center rounded-md px-3 text-sm font-medium transition-colors " +
+        "flex h-9 items-center gap-2.5 rounded-md px-3 text-sm font-medium transition-colors " +
         (ativo
           ? "bg-[var(--primary)] text-[var(--primary-foreground)]"
           : "text-[var(--muted-foreground)] hover:bg-[var(--muted)] hover:text-[var(--foreground)]")
       }
     >
+      <Icone className="h-4 w-4 shrink-0" />
       {label}
     </Link>
   );
@@ -73,7 +97,13 @@ export function Sidebar({ candidatos, userEmail }: { candidatos: CandidatoOpcao[
           {ITENS.map((item) => {
             const href = `/${candidatoSlug}/${item.segmento}`;
             return (
-              <ItemMenu key={item.segmento} href={href} label={item.label} ativo={pathname.startsWith(href)} />
+              <ItemMenu
+                key={item.segmento}
+                href={href}
+                label={item.label}
+                icone={item.icone}
+                ativo={pathname.startsWith(href)}
+              />
             );
           })}
         </div>
@@ -81,7 +111,13 @@ export function Sidebar({ candidatos, userEmail }: { candidatos: CandidatoOpcao[
 
       <div className="flex flex-col gap-1 border-t border-[var(--border)] pt-4">
         {ITENS_GLOBAIS.map((item) => (
-          <ItemMenu key={item.href} href={item.href} label={item.label} ativo={pathname.startsWith(item.href)} />
+          <ItemMenu
+            key={item.href}
+            href={item.href}
+            label={item.label}
+            icone={item.icone}
+            ativo={pathname.startsWith(item.href)}
+          />
         ))}
       </div>
 
@@ -93,7 +129,7 @@ export function Sidebar({ candidatos, userEmail }: { candidatos: CandidatoOpcao[
           <ThemeToggle />
           <form action={logoutAction}>
             <Button type="submit" variant="ghost" size="sm" className="px-2">
-              Sair
+              <LogOut className="h-4 w-4" /> Sair
             </Button>
           </form>
         </div>

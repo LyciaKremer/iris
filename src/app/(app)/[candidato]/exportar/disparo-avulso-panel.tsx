@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
+import { Send } from "lucide-react";
 import { exportarAvulsoAction } from "@/server/actions/exportar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -95,7 +96,7 @@ export function DisparoAvulsoPanel({ candidatoId }: { candidatoId: string }) {
       </div>
 
       <Button onClick={gerar} loading={pending} disabled={!inicio || !fim}>
-        {pending ? "Gerando…" : "Gerar mensagens (avulso)"}
+        <Send className="h-4 w-4" /> {pending ? "Gerando…" : "Gerar mensagens (avulso)"}
       </Button>
 
       {mensagens && (

@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import JSZip from "jszip";
+import { Send, FileArchive, Download, Copy } from "lucide-react";
 import { exportarPorHorarioAction } from "@/server/actions/exportar";
 import { prepararConferenciaAction } from "@/server/actions/conferencia";
 import { horariosPorTipo, type Horario } from "@/lib/horarios";
@@ -93,7 +94,7 @@ export function ExportPanel({ candidatoId, tipo }: { candidatoId: string; tipo: 
         </div>
         <div>
           <label className="block text-sm font-medium">Envio</label>
-          <Select value={horario} onChange={(e) => setHorario(e.target.value as Horario)} className="mt-1 w-auto">
+          <Select value={horario} onChange={(e) => setHorario(e.target.value as Horario)} className="mt-1 w-28">
             {horarios.map((h) => (
               <option key={h} value={h}>
                 {h}
@@ -102,10 +103,10 @@ export function ExportPanel({ candidatoId, tipo }: { candidatoId: string; tipo: 
           </Select>
         </div>
         <Button onClick={gerar} loading={pending} disabled={!data}>
-          {pending ? "Gerando…" : "Gerar mensagens"}
+          <Send className="h-4 w-4" /> {pending ? "Gerando…" : "Gerar mensagens"}
         </Button>
         <Button onClick={baixarConferencia} loading={pendingConferencia} disabled={!data} variant="outline">
-          {pendingConferencia ? "Gerando…" : "Baixar conferência (.zip)"}
+          <FileArchive className="h-4 w-4" /> {pendingConferencia ? "Gerando…" : "Baixar conferência (.zip)"}
         </Button>
       </div>
 
@@ -118,14 +119,14 @@ export function ExportPanel({ candidatoId, tipo }: { candidatoId: string; tipo: 
           <div className="flex items-center justify-between">
             <p className="text-sm text-[var(--muted-foreground)]">{mensagens.length} mensagem(ns) geradas.</p>
             <Button onClick={baixar} variant="outline" size="sm">
-              Baixar JSON
+              <Download className="h-3.5 w-3.5" /> Baixar JSON
             </Button>
           </div>
 
           <div className="flex items-center justify-between gap-2 rounded-md border border-[var(--border)] bg-[var(--muted)] p-3">
             <code className="overflow-x-auto whitespace-nowrap text-xs">{comando}</code>
             <Button onClick={copiarComando} variant="outline" size="sm" className="shrink-0">
-              Copiar comando
+              <Copy className="h-3.5 w-3.5" /> Copiar comando
             </Button>
           </div>
 

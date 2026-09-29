@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
+import { FileText, BarChart3 } from "lucide-react";
 import {
   gerarRelatorioIndividualAction,
   gerarRelatorioComparativoAction,
@@ -131,10 +132,11 @@ export function RelatorioGeralPanel({ candidatos }: { candidatos: CandidatoOpcao
 
       <div className="flex flex-wrap gap-2">
         <Button onClick={gerar} loading={pending} disabled={selecionados.size === 0}>
+          <FileText className="h-4 w-4" />{" "}
           {pending ? "Gerando…" : `Gerar relatório${selecionados.size > 1 ? " comparativo" : ""} (.docx)`}
         </Button>
         <Button onClick={verGraficos} loading={pendingGraficos} disabled={selecionados.size === 0} variant="outline">
-          {pendingGraficos ? "Calculando…" : "Ver gráficos"}
+          <BarChart3 className="h-4 w-4" /> {pendingGraficos ? "Calculando…" : "Ver gráficos"}
         </Button>
       </div>
 

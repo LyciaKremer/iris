@@ -9,7 +9,7 @@ export function DateSelect({ datas, atual }: { datas: string[]; atual: string })
   const pathname = usePathname();
 
   return (
-    <Select defaultValue={atual} onChange={(e) => router.push(`${pathname}?data=${e.target.value}`)} className="w-auto">
+    <Select defaultValue={atual} onChange={(e) => router.push(`${pathname}?data=${e.target.value}`)} className="w-40">
       {datas.map((d) => (
         <option key={d} value={d}>
           {formatarDataBR(d)}

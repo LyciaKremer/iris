@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { ListChecks } from "lucide-react";
 import { toast } from "sonner";
 import { itensDoDia } from "@/lib/checklist";
 import { obterChecklistAction, alternarItemChecklistAction } from "@/server/actions/checklist";
@@ -43,7 +44,7 @@ export function ChecklistFlutuante() {
         aria-label="Checklist do dia"
         className="fixed bottom-6 right-6 z-40 flex h-12 w-12 items-center justify-center rounded-full bg-[var(--primary)] text-[var(--primary-foreground)] shadow-lg"
       >
-        ✅
+        <ListChecks className="h-5 w-5" />
         {feitos > 0 && (
           <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-[var(--card)] text-[10px] font-semibold text-[var(--foreground)] ring-1 ring-[var(--border)]">
             {feitos}

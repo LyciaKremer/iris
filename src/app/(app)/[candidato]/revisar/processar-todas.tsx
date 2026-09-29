@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { RefreshCw } from "lucide-react";
 import { processarItemAction } from "@/server/actions/processar";
 import { Button } from "@/components/ui/button";
 
@@ -36,6 +37,7 @@ export function ProcessarTodas({ ids }: { ids: string[] }) {
 
   return (
     <Button onClick={processarTodas} loading={pending}>
+      <RefreshCw className="h-4 w-4" />{" "}
       {progresso ? `Processando ${progresso.atual}/${progresso.total}…` : `Processar todas (${ids.length})`}
     </Button>
   );

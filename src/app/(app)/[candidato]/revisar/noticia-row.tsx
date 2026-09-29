@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
+import { RefreshCw, Pencil, Eye, EyeOff, ExternalLink, TriangleAlert, Check, X } from "lucide-react";
 import { useAction } from "@/hooks/use-action";
 import { processarItemAction } from "@/server/actions/processar";
 import { salvarRevisaoAction } from "@/server/actions/revisar";
@@ -39,7 +40,7 @@ function corSentimento(sentimento: string | null): string {
 function Badge({ cor, children }: { cor: string; children: React.ReactNode }) {
   return (
     <span
-      className="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium"
+      className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium"
       style={{ borderColor: cor, color: cor }}
     >
       {children}
@@ -87,7 +88,7 @@ export function NoticiaRow({
         </div>
         {!processado && (
           <Button onClick={processar} loading={pending} size="sm" className="shrink-0">
-            {pending ? "Processando…" : "Processar"}
+            <RefreshCw className="h-3.5 w-3.5" /> {pending ? "Processando…" : "Processar"}
           </Button>
         )}
       </div>
@@ -111,7 +112,11 @@ export function NoticiaRow({
               <Badge cor="var(--muted-foreground)">{noticia.secretaria}</Badge>
             )}
             {noticia.revisadoManualmente && <Badge cor="var(--muted-foreground)">revisado manualmente</Badge>}
-            {noticia.revisadoPelaIa && <Badge cor="var(--muted-foreground)">⚠️ corrigido pela IA</Badge>}
+            {noticia.revisadoPelaIa && (
+              <Badge cor="var(--muted-foreground)">
+                <TriangleAlert className="h-3 w-3" /> corrigido pela IA
+              </Badge>
+            )}
           </div>
 
           {naoRelevante ? (
@@ -133,10 +138,15 @@ export function NoticiaRow({
 
           <div className="flex flex-wrap items-center gap-2">
             <Button onClick={() => setEditando(true)} variant="outline" size="sm">
-              Editar
+              <Pencil className="h-3.5 w-3.5" /> Editar
             </Button>
             {noticia.transcricao && (
               <Button onClick={() => setMostrarTranscricao((v) => !v)} variant="outline" size="sm">
+                {mostrarTranscricao ? (
+                  <EyeOff className="h-3.5 w-3.5" />
+                ) : (
+                  <Eye className="h-3.5 w-3.5" />
+                )}
                 {mostrarTranscricao ? "Ocultar transcrição" : "Ver transcrição"}
               </Button>
             )}
@@ -147,7 +157,7 @@ export function NoticiaRow({
                 rel="noopener noreferrer"
                 className={buttonVariants("outline", "sm")}
               >
-                Abrir mídia ↗
+                Abrir mídia <ExternalLink className="h-3.5 w-3.5" />
               </a>
             )}
           </div>
@@ -207,10 +217,10 @@ function EditForm({
 
       <div className="flex items-center gap-2">
         <Button type="submit" loading={pending} size="sm">
-          {pending ? "Salvando…" : "Salvar"}
+          <Check className="h-3.5 w-3.5" /> {pending ? "Salvando…" : "Salvar"}
         </Button>
         <Button type="button" onClick={onDone} variant="ghost" size="sm">
-          Cancelar
+          <X className="h-3.5 w-3.5" /> Cancelar
         </Button>
       </div>
     </form>

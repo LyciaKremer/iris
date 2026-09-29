@@ -3,6 +3,7 @@
 import { useRef } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
+import { Upload, ArrowRight } from "lucide-react";
 import { useAction } from "@/hooks/use-action";
 import { importarAction } from "@/server/actions/importar";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -52,10 +53,10 @@ export function ImportForm({ candidatoId, candidatoSlug }: { candidatoId: string
 
       <div className="flex items-center justify-end gap-3">
         <Link href={`/${candidatoSlug}/revisar`} className={buttonVariants("outline", "md")}>
-          Já colei tudo — ir para revisão
+          Já colei tudo — ir para revisão <ArrowRight className="h-4 w-4" />
         </Link>
         <Button type="submit" loading={pending}>
-          {pending ? "Importando…" : "Importar página"}
+          <Upload className="h-4 w-4" /> {pending ? "Importando…" : "Importar página"}
         </Button>
       </div>
     </form>
