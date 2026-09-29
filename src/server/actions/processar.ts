@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { requireUserId } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
-import { gerarClipping } from "@/lib/anthropic";
+import { gerarClipping, resumoIndicaSemInformacao } from "@/lib/anthropic";
 import { verificarResumo } from "@/lib/verificacao";
 import { validarSentimento } from "@/lib/sentimento";
 import { validarSecretaria } from "@/lib/secretaria";
@@ -63,6 +63,16 @@ export async function processarItemAction(id: string): Promise<{ ok: boolean; me
       problemaDetectado = verificacao.problema ?? "";
       revisadoPelaIa = true;
       resumo = verificacao.resumoCorrigido || resumo;
+
+      // A correção pode concluir que, tirando o trecho mal atribuído, não
+      // sobra nada de fato relevante sobre o personagem — nesse caso o
+      // item precisa virar "sem relevância" de verdade (some do disparo),
+      // não ficar com um resumo tipo "Sem informação relevante." vazando
+      // pra mensagem como se fosse um clipping normal.
+      if (resumoIndicaSemInformacao(resumo)) {
+        relevante = false;
+        resumo = "";
+      }
     }
   }
 

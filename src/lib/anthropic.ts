@@ -74,6 +74,27 @@ export type ResultadoClipping = {
   resumoTranscricao?: string;
 };
 
+const MARCADORES_SEM_INFO = ["sem informação", "não há", "nao ha"];
+
+/**
+ * O prompt pede pra responder EXATAMENTE "Sem informação relevante."
+ * quando não há nada relevante — mas o modelo às vezes ignora o "exatamente"
+ * e escreve uma explicação inteira terminando nessa frase (ex: "A
+ * transcrição é sobre X e não menciona {personagem}.\n\nSem informação
+ * relevante."). Um startsWith() sozinho não pega esse caso, e o resumo
+ * inteiro (explicação + frase de encerramento) acaba sendo tratado como um
+ * clipping de verdade — vazando pro disparo com o rodapé de "solicite a
+ * mídia" grudado embaixo. Por isso checa também a ÚLTIMA linha não-vazia,
+ * não só o começo do texto.
+ */
+export function resumoIndicaSemInformacao(resumo: string): boolean {
+  if (!resumo.trim()) return true;
+  const linhas = resumo.trim().split("\n").filter((l) => l.trim());
+  const ultimaLinha = (linhas.at(-1) ?? "").trim().toLowerCase();
+  const primeiraLinha = resumo.trim().toLowerCase();
+  return MARCADORES_SEM_INFO.some((m) => primeiraLinha.startsWith(m) || ultimaLinha.startsWith(m));
+}
+
 export type TipoCandidato = "pessoa" | "instituicao";
 
 function promptClippingInstituicao(personagem: string, texto: string): string {
@@ -179,14 +200,7 @@ export async function gerarClipping(
     resumo = "Sem informação relevante.";
   }
 
-  const resumoLower = resumo.toLowerCase();
-  const semInfo =
-    !resumo ||
-    resumoLower.startsWith("sem informação") ||
-    resumoLower.startsWith("não há") ||
-    resumoLower.startsWith("nao ha");
-
-  if (semInfo) {
+  if (resumoIndicaSemInformacao(resumo)) {
     const resumoTranscricao = await gerarResumoGeral(texto);
     return { resumo: "", relevante: false, resumoTranscricao };
   }
