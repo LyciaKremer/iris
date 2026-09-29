@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Send } from "lucide-react";
 import { exportarAvulsoAction } from "@/server/actions/exportar";
 import { Button } from "@/components/ui/button";
+import { CopyButton } from "@/components/ui/copy-button";
 import { Input } from "@/components/ui/input";
 
 const TIPOS_DISPONIVEIS = ["Rádio", "Televisão", "Online"];
@@ -103,12 +104,12 @@ export function DisparoAvulsoPanel({ candidatoId }: { candidatoId: string }) {
         <div className="space-y-2">
           <p className="text-sm text-[var(--muted-foreground)]">{mensagens.length} mensagem(ns) geradas.</p>
           {mensagens.map((m, i) => (
-            <pre
-              key={i}
-              className="whitespace-pre-wrap rounded-md border border-[var(--border)] bg-[var(--muted)] p-3 text-xs"
-            >
-              {m}
-            </pre>
+            <div key={i} className="relative">
+              <pre className="whitespace-pre-wrap rounded-md border border-[var(--border)] bg-[var(--muted)] p-3 pr-20 text-xs">
+                {m}
+              </pre>
+              <CopyButton texto={m} className="absolute right-2 top-2" />
+            </div>
           ))}
         </div>
       )}

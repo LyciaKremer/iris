@@ -3,11 +3,12 @@
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import JSZip from "jszip";
-import { Send, FileArchive, Download, Copy } from "lucide-react";
+import { Send, FileArchive, Download } from "lucide-react";
 import { exportarPorHorarioAction } from "@/server/actions/exportar";
 import { prepararConferenciaAction } from "@/server/actions/conferencia";
 import { horariosPorTipo, type Horario } from "@/lib/horarios";
 import { Button } from "@/components/ui/button";
+import { CopyButton } from "@/components/ui/copy-button";
 import { Input, Select } from "@/components/ui/input";
 import { hojeBR } from "@/lib/dates";
 
@@ -76,15 +77,6 @@ export function ExportPanel({ candidatoId, tipo }: { candidatoId: string; tipo: 
     URL.revokeObjectURL(url);
   }
 
-  async function copiarComando() {
-    try {
-      await navigator.clipboard.writeText(comando);
-      toast.success("Comando copiado.");
-    } catch {
-      toast.error("Não consegui copiar — copie manualmente.");
-    }
-  }
-
   return (
     <div className="space-y-4">
       <div className="flex items-end gap-2">
@@ -125,19 +117,17 @@ export function ExportPanel({ candidatoId, tipo }: { candidatoId: string; tipo: 
 
           <div className="flex items-center justify-between gap-2 rounded-md border border-[var(--border)] bg-[var(--muted)] p-3">
             <code className="overflow-x-auto whitespace-nowrap text-xs">{comando}</code>
-            <Button onClick={copiarComando} variant="outline" size="sm" className="shrink-0">
-              <Copy className="h-3.5 w-3.5" /> Copiar comando
-            </Button>
+            <CopyButton texto={comando}>Copiar comando</CopyButton>
           </div>
 
           <div className="space-y-2">
             {mensagens.map((m, i) => (
-              <pre
-                key={i}
-                className="whitespace-pre-wrap rounded-md border border-[var(--border)] bg-[var(--muted)] p-3 text-xs"
-              >
-                {m}
-              </pre>
+              <div key={i} className="relative">
+                <pre className="whitespace-pre-wrap rounded-md border border-[var(--border)] bg-[var(--muted)] p-3 pr-20 text-xs">
+                  {m}
+                </pre>
+                <CopyButton texto={m} className="absolute right-2 top-2" />
+              </div>
             ))}
           </div>
         </div>
