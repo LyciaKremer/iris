@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { listarDatasExecucao, listarPorData } from "@/server/queries/noticias";
 import { getCandidatoPorSlug } from "@/server/queries/candidatos";
-import { NoticiaRow } from "./noticia-row";
+import { RevisarLista } from "./revisar-lista";
 import { DateSelect } from "./date-select";
 import { ProcessarTodas } from "./processar-todas";
 import { formatarDataBR } from "@/lib/dates";
@@ -57,11 +57,12 @@ export default async function RevisarPage({
         <ProcessarTodas ids={idsPendentes} />
       </div>
 
-      <div className="space-y-3">
-        {noticias.map((noticia) => (
-          <NoticiaRow key={noticia.id} noticia={noticia} rotuloClassificacao={rotuloClassificacao} />
-        ))}
-      </div>
+      <RevisarLista
+        noticias={noticias}
+        rotuloClassificacao={rotuloClassificacao}
+        dataAtual={dataAtual}
+        tipoCandidato={candidato.tipo as "pessoa" | "instituicao"}
+      />
     </div>
   );
 }

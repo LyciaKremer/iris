@@ -33,9 +33,9 @@ export function CandidatoRow({ candidato }: { candidato: CandidatoVM }) {
   }
 
   return (
-    <div className="flex items-center justify-between rounded-md border border-[var(--border)] bg-[var(--card)] p-3">
-      <div>
-        <p className="text-sm font-medium">
+    <div className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-[var(--border)] bg-[var(--card)] p-3">
+      <div className="min-w-0">
+        <p className="text-sm font-medium break-words">
           {candidato.nome} <span className="text-xs text-[var(--muted-foreground)]">/{candidato.slug}</span>
         </p>
         <p className="text-xs text-[var(--muted-foreground)]">
@@ -71,7 +71,7 @@ function EditForm({ candidato, onDone }: { candidato: CandidatoVM; onDone: () =>
   return (
     <form action={formAction} className="space-y-2 rounded-md border border-[var(--border)] bg-[var(--card)] p-3">
       <input type="hidden" name="id" value={candidato.id} />
-      <div className="flex gap-2">
+      <div className="flex flex-col gap-2 sm:flex-row">
         <Input name="nome" defaultValue={candidato.nome} className="flex-1" />
         <Input
           name="clippingMonitoringId"

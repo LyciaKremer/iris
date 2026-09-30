@@ -79,7 +79,7 @@ export function ExportPanel({ candidatoId, tipo }: { candidatoId: string; tipo: 
 
   return (
     <div className="space-y-4">
-      <div className="flex items-end gap-2">
+      <div className="flex flex-wrap items-end gap-2">
         <div>
           <label className="block text-sm font-medium">Data do disparo</label>
           <Input type="date" value={data} onChange={(e) => setData(e.target.value)} className="mt-1 w-auto" />
@@ -116,7 +116,7 @@ export function ExportPanel({ candidatoId, tipo }: { candidatoId: string; tipo: 
           </div>
 
           <div className="flex items-center justify-between gap-2 rounded-md border border-[var(--border)] bg-[var(--muted)] p-3">
-            <code className="overflow-x-auto whitespace-nowrap text-xs">{comando}</code>
+            <code className="min-w-0 overflow-x-auto whitespace-nowrap text-xs">{comando}</code>
             <CopyButton texto={comando}>Copiar comando</CopyButton>
           </div>
 

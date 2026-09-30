@@ -52,6 +52,27 @@ export function horarioValidoPara(horario: Horario, tipoCandidato: "pessoa" | "i
   return (horariosPorTipo(tipoCandidato) as readonly string[]).includes(horario);
 }
 
+/**
+ * Descobre a qual horário de disparo uma notícia pertence, dada sua
+ * `dataPublicacao` — o inverso de calcularPeriodo(). Usado pelo filtro da
+ * tela de Revisar, pra explicar por que uma notícia aparece (ou não) num
+ * export específico sem precisar abrir o "Exportar" pra descobrir: cada
+ * horário tem uma janela fixa de data/hora (não "o que foi importado
+ * hoje"), então duas notícias importadas juntas podem cair em horários
+ * diferentes. Retorna null se a data de publicação não cair em nenhuma
+ * janela da grade (não deveria acontecer, mas evita lançar erro na tela). */
+export function horarioDeNoticia(
+  dataPublicacao: Date,
+  dataBase: string,
+  tipoCandidato: "pessoa" | "instituicao",
+): Horario | null {
+  for (const horario of horariosPorTipo(tipoCandidato)) {
+    const { inicio, fim } = calcularPeriodo(dataBase, horario, tipoCandidato);
+    if (dataPublicacao >= inicio && dataPublicacao <= fim) return horario;
+  }
+  return null;
+}
+
 const OFFSET_BRASILIA_HORAS = 3;
 
 function instanteBrasilia(ano: number, mes: number, dia: number, hora: number, minuto: number, segundo: number): Date {

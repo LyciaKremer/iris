@@ -51,7 +51,7 @@ export function ImportForm({ candidatoId, candidatoSlug }: { candidatoId: string
 
       {errorMessage && <p className="text-sm text-[var(--negative)]">{errorMessage}</p>}
 
-      <div className="flex items-center justify-end gap-3">
+      <div className="flex flex-wrap items-center justify-end gap-3">
         <Link href={`/${candidatoSlug}/revisar`} className={buttonVariants("outline", "md")}>
           Já colei tudo — ir para revisão <ArrowRight className="h-4 w-4" />
         </Link>

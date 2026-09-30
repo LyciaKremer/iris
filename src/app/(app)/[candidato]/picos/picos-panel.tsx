@@ -31,7 +31,7 @@ export function PicosPanel({ candidatoId }: { candidatoId: string }) {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-end gap-2">
+      <div className="flex flex-wrap items-end gap-2">
         <div>
           <label className="block text-sm font-medium">Dias de histórico</label>
           <Input

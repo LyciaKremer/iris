@@ -11,10 +11,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const candidatos = await listarCandidatosAtivos();
 
   return (
-    <div className="flex min-h-full">
+    <div className="flex min-h-full flex-col md:flex-row">
       <Sidebar candidatos={candidatos.map((c) => ({ slug: c.slug, nome: c.nome }))} userEmail={user.email} />
       <div className="min-w-0 flex-1">
-        <main className="mx-auto max-w-4xl px-4 py-8">{children}</main>
+        <main className="mx-auto max-w-4xl px-4 py-6 md:py-8">{children}</main>
       </div>
       <VoltarAoTopo />
       <ChecklistFlutuante />
